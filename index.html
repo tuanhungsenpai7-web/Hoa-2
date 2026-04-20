@@ -69,7 +69,7 @@
 <body>
 
     <!-- MÀN HÌNH ĐĂNG NHẬP / ĐĂNG KÝ -->
-    <div id="authView" class="active-view">
+    <div id="authView">
         <div class="header"><h2>Hệ Thống Đăng Nhập</h2></div>
         <div class="auth-box">
             <h3 style="color:var(--primary); margin-top:0;">Chào mừng bạn</h3>
@@ -109,7 +109,7 @@
         
         <div class="container">
             <!-- Menu các chương -->
-            <div id="menuList" class="active-view">
+            <div id="menuList">
                 <div style="margin-bottom: 10px; font-weight:bold; color: #555;">Xin chào, <span id="currentUserDisplay" style="color:var(--primary);"></span>!</div>
                 <div class="menu-grid" id="menuGrid"></div>
             </div>
@@ -144,13 +144,26 @@
 
     <script>
         /* === 1. QUẢN LÝ DỮ LIỆU CƠ SỞ CHUNG === */
-        const ADMIN_PIN = "88888888"; // MÃ PIN ADMIN ĐỂ DUYỆT TÀI KHOẢN
+        const ADMIN_PIN = "686868"; // MÃ PIN ADMIN
         let usersDB = JSON.parse(localStorage.getItem('chem_users_db')) || [];
-        let currentUser = null; // Tài khoản đang đăng nhập hiện tại
+        // Lấy phiên đăng nhập lưu trong máy nếu có
+        let currentUser = JSON.parse(localStorage.getItem('chem_current_session')) || null; 
 
-        // App variables
         let currentList = []; 
         let currentIndex = 0;
+
+        /* KIỂM TRA ĐĂNG NHẬP TỰ ĐỘNG KHI TẢI TRANG */
+        window.onload = function() {
+            if (currentUser && currentUser.isApproved) {
+                // Nếu đã đăng nhập trước đó và được duyệt -> Vào thẳng
+                document.getElementById('currentUserDisplay').innerText = currentUser.username;
+                switchMainView('appView');
+                showMenu();
+            } else {
+                // Nếu chưa -> Ở lại màn hình đăng nhập
+                switchMainView('authView');
+            }
+        };
 
         /* === 2. CHỨC NĂNG ĐĂNG NHẬP / ĐĂNG KÝ === */
         function register() {
@@ -158,11 +171,9 @@
             const p = document.getElementById('password').value.trim();
             if(!u || !p) return alert("Vui lòng nhập đầy đủ Tài khoản và Mật khẩu!");
             
-            // Kiểm tra trùng lặp
             const exists = usersDB.find(user => user.username === u);
             if(exists) return alert("Tên đăng nhập này đã tồn tại! Vui lòng chọn tên khác.");
 
-            // Tạo tài khoản mới (Chưa được duyệt, savedQuestions rỗng)
             usersDB.push({ username: u, password: p, isApproved: false, savedQuestions: [] });
             saveDB();
             alert("Đăng ký thành công! Hãy đợi Admin duyệt tài khoản trước khi đăng nhập.");
@@ -182,15 +193,19 @@
                 return alert("Tài khoản của bạn CHƯA ĐƯỢC DUYỆT! Vui lòng liên hệ Admin.");
             }
 
-            // Đăng nhập thành công
+            // Đăng nhập thành công -> LƯU PHIÊN LÀM VIỆC ĐỂ TỰ ĐỘNG ĐĂNG NHẬP LẦN SAU
             currentUser = user;
+            localStorage.setItem('chem_current_session', JSON.stringify(currentUser));
+            
             document.getElementById('currentUserDisplay').innerText = currentUser.username;
             switchMainView('appView');
             showMenu();
         }
 
         function logout() {
+            // XÓA PHIÊN LÀM VIỆC KHI ĐĂNG XUẤT
             currentUser = null;
+            localStorage.removeItem('chem_current_session');
             document.getElementById('username').value = '';
             document.getElementById('password').value = '';
             switchMainView('authView');
@@ -216,7 +231,7 @@
             listDiv.innerHTML = '';
             
             if(usersDB.length === 0) {
-                listDiv.innerHTML = '<div style="color:gray;">Chưa có người dùng nào đăng ký hệ thống.</div>';
+                listDiv.innerHTML = '<div style="color:gray;">Chưa có người dùng nào đăng ký.</div>';
                 return;
             }
 
@@ -225,7 +240,7 @@
                 const statusText = user.isApproved ? "Đã duyệt" : "Chờ duyệt";
                 const btnAction = user.isApproved 
                     ? `<button class="btn-revoke" onclick="toggleApproval(${index}, false)">Hủy duyệt</button>`
-                    : `<button class="btn-approve" onclick="toggleApproval(${index}, true)">Cấp quyền (Duyệt)</button>`;
+                    : `<button class="btn-approve" onclick="toggleApproval(${index}, true)">Cấp quyền</button>`;
 
                 listDiv.innerHTML += `
                     <div class="user-row">
@@ -252,8 +267,7 @@
             document.getElementById(viewId).classList.add('active-view');
         }
 
-        /* === 4. CHỨC NĂNG HỌC TẬP (APP) DÀNH CHO USER === */
-        
+        /* === 4. CHỨC NĂNG HỌC TẬP === */
         function renderMenu() {
             const menuGrid = document.getElementById('menuGrid');
             menuGrid.innerHTML = '';
@@ -268,12 +282,11 @@
                 `;
             }
 
-            // Nút câu hỏi đã lưu CỦA RIÊNG USER ĐÓ
-            const savedCount = currentUser.savedQuestions.length;
+            const savedCount = currentUser ? currentUser.savedQuestions.length : 0;
             menuGrid.innerHTML += `
                 <div class="menu-card saved-card" onclick="openSavedQuestions()">
-                    <h3 style="margin:0 0 8px 0; color:#d84315; font-size: 17px;">★ Câu hỏi đã lưu (Ôn tập)</h3>
-                    <div style="font-size:14px; color:#555;" id="savedCountText">📌 Bạn đang lưu ${savedCount} câu</div>
+                    <h3 style="margin:0 0 8px 0; color:#d84315; font-size: 17px;">★ Câu hỏi đã lưu</h3>
+                    <div style="font-size:14px; color:#555;" id="savedCountText">📌 Đang lưu ${savedCount} câu</div>
                 </div>
             `;
         }
@@ -292,7 +305,6 @@
             
             for (const chapId in questionDatabase) {
                 questionDatabase[chapId].questions.forEach(q => {
-                    // Kiểm tra mảng lưu cá nhân của user
                     if(currentUser.savedQuestions.includes(q.id)) {
                         currentList.push(q);
                     }
@@ -328,11 +340,10 @@
                 `;
             });
             const savedTextEl = document.getElementById('savedCountText');
-            if(savedTextEl) savedTextEl.innerText = `📌 Bạn đang lưu ${currentUser.savedQuestions.length} câu`;
+            if(savedTextEl) savedTextEl.innerText = `📌 Đang lưu ${currentUser.savedQuestions.length} câu`;
         }
 
-        /* === POPUP VÀ LƯU CÂU HỎI THEO TÀI KHOẢN === */
-        
+        /* LƯU CÂU HỎI & ĐỒNG BỘ PHIÊN LÀM VIỆC */
         function toggleSave(qId) {
             const index = currentUser.savedQuestions.indexOf(qId);
             if (index > -1) {
@@ -341,10 +352,13 @@
                 currentUser.savedQuestions.push(qId); 
             }
             
-            // Cập nhật Database tổng dựa trên user hiện tại
+            // Cập nhật Database
             const dbIndex = usersDB.findIndex(u => u.username === currentUser.username);
             usersDB[dbIndex] = currentUser;
             saveDB();
+            
+            // Cập nhật lại phiên làm việc (session) để không bị mất câu đã lưu nếu F5
+            localStorage.setItem('chem_current_session', JSON.stringify(currentUser));
             
             if (document.getElementById('pageTitle').innerText === "Câu Hỏi Đã Lưu") {
                 openSavedQuestions(); 

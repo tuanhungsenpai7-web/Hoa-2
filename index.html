@@ -3,7 +3,7 @@
 <head>
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0, maximum-scale=1.0, user-scalable=no">
-    <title>Ôn Thi Hóa Học - Hệ Thống Trắc Nghiệm</title>
+    <title>Ôn Thi Hóa Học - Trắc Nghiệm & Ghi Chú</title>
     <!-- Nhúng file dữ liệu Hóa Học -->
     <script src="question-data.js"></script>
     <style>
@@ -65,7 +65,15 @@
         .modal-option:hover { background: #e2e8f0; }
         .modal-option.correct { background: #d4edda !important; border-color: #28a745; color: #155724; font-weight: bold; }
         .modal-option.wrong { background: #f8d7da !important; border-color: #dc3545; color: #721c24; font-weight: bold;}
-        .modal-option.disabled { pointer-events: none; } /* Chống click nhiều lần */
+        .modal-option.disabled { pointer-events: none; }
+
+        /* GHI CHÚ (NOTES) */
+        .note-section { background: #fffde7; border: 1px dashed #ffc107; padding: 15px; border-radius: 8px; margin-bottom: 15px; }
+        .note-title { font-size: 13px; font-weight: bold; color: #b28900; margin-bottom: 5px; }
+        .note-textarea { width: 100%; height: 60px; padding: 10px; border: 1px solid #ccc; border-radius: 6px; box-sizing: border-box; font-family: inherit; font-size: 14px; resize: vertical; }
+        .btn-note { background: #ffc107; color: #000; border: none; padding: 8px 12px; border-radius: 6px; cursor: pointer; font-weight: bold; font-size: 13px; margin-top: 8px; transition: 0.2s; }
+        .btn-note:hover { background: #e0a800; }
+        .btn-note-del { background: #d9534f; color: white; border: none; padding: 8px 12px; border-radius: 6px; cursor: pointer; font-weight: bold; font-size: 13px; margin-top: 8px; margin-left: 5px; display: none; }
 
         .btn-toggle-ans { background: #17a2b8; color: white; border: none; padding: 12px; border-radius: 8px; width: 100%; font-weight: bold; cursor: pointer; margin-bottom: 15px; font-size: 15px;}
         .modal-answer { background: #e8f5e9; color: #1b5e20; padding: 15px; border-radius: 8px; margin-bottom: 20px; border-left: 4px solid var(--success); display: none;}
@@ -135,9 +143,19 @@
             <div style="font-size:13px; color:#666; margin-bottom:8px; font-weight: bold;" id="modalQNum">Câu hỏi</div>
             <div class="modal-q" id="modalQuestion">Nội dung câu hỏi...</div>
             
-            <!-- Vùng chứa các đáp án A B C D để click -->
+            <!-- Vùng chứa các đáp án A B C D -->
             <div class="modal-options" id="modalOptions"></div>
             
+            <!-- VÙNG GHI CHÚ CÁ NHÂN -->
+            <div class="note-section" id="noteSection">
+                <div class="note-title">📝 Ghi chú cá nhân (Công thức, mẹo giải...):</div>
+                <textarea id="modalNoteInput" class="note-textarea" placeholder="Gõ ghi chú của bạn vào đây..."></textarea>
+                <div>
+                    <button class="btn-note" onclick="saveNote()">💾 Lưu ghi chú</button>
+                    <button class="btn-note-del" id="btnDeleteNote" onclick="deleteNote()">🗑 Xóa</button>
+                </div>
+            </div>
+
             <!-- Nút Ẩn/Hiện đáp án -->
             <button class="btn-toggle-ans" id="btnToggleAnswer" onclick="toggleAnswer()">👁 Hiện đáp án & Lời giải</button>
             
@@ -163,7 +181,7 @@
         let currentUser = JSON.parse(localStorage.getItem('chem_current_session')) || null; 
         let currentList = []; 
         let currentIndex = 0;
-        let isAnswerRevealed = false; // Biến theo dõi xem đáp án đã lật hay chưa
+        let isAnswerRevealed = false; 
 
         window.onload = function() {
             if (currentUser && currentUser.isApproved) {
@@ -181,7 +199,9 @@
             if(!u || !p) return alert("Vui lòng nhập đầy đủ Tài khoản và Mật khẩu!");
             const exists = usersDB.find(user => user.username === u);
             if(exists) return alert("Tên đăng nhập này đã tồn tại!");
-            usersDB.push({ username: u, password: p, isApproved: false, savedQuestions: [] });
+            
+            // Cập nhật cấu trúc: Thêm trường notes: {} để lưu ghi chú
+            usersDB.push({ username: u, password: p, isApproved: false, savedQuestions: [], notes: {} });
             saveDB();
             alert("Đăng ký thành công! Hãy đợi Admin duyệt tài khoản.");
             document.getElementById('username').value = ''; document.getElementById('password').value = '';
@@ -194,6 +214,10 @@
             const user = usersDB.find(user => user.username === u && user.password === p);
             if(!user) return alert("Sai tên đăng nhập hoặc mật khẩu!");
             if(!user.isApproved) return alert("Tài khoản CHƯA ĐƯỢC DUYỆT!");
+            
+            // Khởi tạo vùng nhớ ghi chú nếu tài khoản cũ chưa có
+            user.notes = user.notes || {}; 
+            
             currentUser = user;
             localStorage.setItem('chem_current_session', JSON.stringify(currentUser));
             document.getElementById('currentUserDisplay').innerText = currentUser.username;
@@ -207,6 +231,13 @@
         }
 
         function saveDB() { localStorage.setItem('chem_users_db', JSON.stringify(usersDB)); }
+
+        /* BẢO ĐẢM ĐỒNG BỘ DỮ LIỆU USER */
+        function syncCurrentUser() {
+            const dbIndex = usersDB.findIndex(u => u.username === currentUser.username);
+            if(dbIndex > -1) { usersDB[dbIndex] = currentUser; saveDB(); }
+            localStorage.setItem('chem_current_session', JSON.stringify(currentUser));
+        }
 
         function openAdminLogin() {
             const pin = prompt("Nhập mã PIN của Quản trị viên:");
@@ -269,22 +300,26 @@
             currentList.forEach((q, index) => {
                 const isSaved = currentUser.savedQuestions.includes(q.id);
                 const saveText = isSaved ? '★ Đã lưu (Hủy)' : '☆ Lưu câu này';
-                listDiv.innerHTML += `<div class="q-card"><div class="q-content" onclick="openPopup(${index})"><span style="color:#888; font-size:13px; display:inline-block; margin-bottom:5px;">Câu ${index + 1}:</span><br>${q.question}</div><div class="actions"><button class="btn btn-save ${isSaved ? 'saved' : ''}" onclick="toggleSave('${q.id}')">${saveText}</button></div></div>`;
+                
+                // Hiển thị icon nếu câu hỏi đó có ghi chú
+                currentUser.notes = currentUser.notes || {};
+                const hasNote = currentUser.notes[q.id] ? '<span style="color:#b28900; margin-left: 5px;">📝 (Có ghi chú)</span>' : '';
+
+                listDiv.innerHTML += `<div class="q-card"><div class="q-content" onclick="openPopup(${index})"><span style="color:#888; font-size:13px; display:inline-block; margin-bottom:5px;">Câu ${index + 1}: ${hasNote}</span><br>${q.question}</div><div class="actions"><button class="btn btn-save ${isSaved ? 'saved' : ''}" onclick="toggleSave('${q.id}')">${saveText}</button></div></div>`;
             });
             const savedTextEl = document.getElementById('savedCountText');
             if(savedTextEl) savedTextEl.innerText = `📌 Đang lưu ${currentUser.savedQuestions.length} câu`;
         }
 
-        /* TÍNH NĂNG POPUP TRẮC NGHIỆM MỚI */
+        /* TÍNH NĂNG POPUP VÀ GHI CHÚ */
         function openPopup(index) {
             currentIndex = index;
             const q = currentList[currentIndex];
-            isAnswerRevealed = false; // Reset trạng thái chưa lật đáp án
+            isAnswerRevealed = false; 
 
             document.getElementById('modalQNum').innerText = `Câu hỏi ${currentIndex + 1} / ${currentList.length}`;
             document.getElementById('modalQuestion').innerText = q.question;
             
-            // Vẽ các đáp án có thể bấm (onclick = checkAnswer)
             const optionsDiv = document.getElementById('modalOptions');
             optionsDiv.innerHTML = '';
             if (q.options && q.options.length > 0) {
@@ -293,10 +328,15 @@
                 });
             }
 
+            // LOAD GHI CHÚ (NẾU CÓ)
+            currentUser.notes = currentUser.notes || {};
+            const userNote = currentUser.notes[q.id] || "";
+            document.getElementById('modalNoteInput').value = userNote;
+            document.getElementById('btnDeleteNote').style.display = userNote ? "inline-block" : "none";
+
             document.getElementById('modalAnswerText').innerText = q.answer;
             document.getElementById('modalExplainText').innerText = q.explain ? `Giải thích: ${q.explain}` : '';
 
-            // Reset khối đáp án về trạng thái ẨN
             document.getElementById('modalAnswerBlock').style.display = 'none';
             document.getElementById('btnToggleAnswer').innerText = '👁 Hiện đáp án & Lời giải';
 
@@ -307,9 +347,43 @@
             document.getElementById('qModal').classList.add('active');
         }
 
-        // Kiểm tra xem người dùng chọn đúng hay sai
+        // HÀM LƯU GHI CHÚ
+        function saveNote() {
+            const q = currentList[currentIndex];
+            const text = document.getElementById('modalNoteInput').value.trim();
+            currentUser.notes = currentUser.notes || {};
+            
+            if (text) {
+                currentUser.notes[q.id] = text;
+                document.getElementById('btnDeleteNote').style.display = "inline-block";
+                alert("Đã lưu ghi chú thành công!");
+            } else {
+                delete currentUser.notes[q.id];
+                document.getElementById('btnDeleteNote').style.display = "none";
+            }
+            syncCurrentUser();
+            
+            // Render lại danh sách câu hỏi bên ngoài để hiện chữ "Có ghi chú"
+            if (document.getElementById('pageTitle').innerText === "Câu Hỏi Đã Lưu") { openSavedQuestions(); } else { renderQuestionList(); }
+        }
+
+        // HÀM XÓA GHI CHÚ
+        function deleteNote() {
+            const q = currentList[currentIndex];
+            currentUser.notes = currentUser.notes || {};
+            
+            if(currentUser.notes[q.id]) {
+                delete currentUser.notes[q.id];
+                document.getElementById('modalNoteInput').value = "";
+                document.getElementById('btnDeleteNote').style.display = "none";
+                syncCurrentUser();
+                
+                if (document.getElementById('pageTitle').innerText === "Câu Hỏi Đã Lưu") { openSavedQuestions(); } else { renderQuestionList(); }
+            }
+        }
+
         function checkAnswer(selectedIndex) {
-            if (isAnswerRevealed) return; // Nếu đã lật đáp án rồi thì không cho click nữa
+            if (isAnswerRevealed) return; 
             isAnswerRevealed = true;
 
             const q = currentList[currentIndex];
@@ -318,60 +392,43 @@
 
             const options = document.querySelectorAll('.modal-option');
             options.forEach((optEl, i) => {
-                optEl.classList.add('disabled'); // Khóa các nút lại
-                if (q.options[i] === q.answer) {
-                    optEl.classList.add('correct'); // Tô màu XANH cho đáp án đúng
-                }
+                optEl.classList.add('disabled'); 
+                if (q.options[i] === q.answer) { optEl.classList.add('correct'); }
             });
 
-            if (!isCorrect) {
-                // Nếu chọn sai, tô màu ĐỎ cho ô vừa chọn
-                document.getElementById(`opt_${selectedIndex}`).classList.add('wrong');
-            }
+            if (!isCorrect) { document.getElementById(`opt_${selectedIndex}`).classList.add('wrong'); }
 
-            // Hiện khối giải thích và đổi nút
             document.getElementById('modalAnswerBlock').style.display = 'block';
             document.getElementById('btnToggleAnswer').innerText = '🙈 Ẩn đáp án & Lời giải';
         }
 
-        // Nút bấm Hiện/Ẩn thủ công
         function toggleAnswer() {
             const ansBlock = document.getElementById('modalAnswerBlock');
             const btn = document.getElementById('btnToggleAnswer');
             const q = currentList[currentIndex];
 
             if (ansBlock.style.display === 'none') {
-                // ĐANG ẨN -> HIỆN THỊ
                 ansBlock.style.display = 'block';
                 btn.innerText = '🙈 Ẩn đáp án & Lời giải';
-                isAnswerRevealed = true; // Đã xem thì không cho click nữa
-
+                isAnswerRevealed = true; 
                 const options = document.querySelectorAll('.modal-option');
                 options.forEach((optEl, i) => {
                     optEl.classList.add('disabled');
-                    if (q.options[i] === q.answer) {
-                        optEl.classList.add('correct');
-                    }
+                    if (q.options[i] === q.answer) { optEl.classList.add('correct'); }
                 });
             } else {
-                // ĐANG HIỆN -> ẨN ĐI (CHO LÀM LẠI HOẶC ĐỌC LẠI ĐỀ)
                 ansBlock.style.display = 'none';
                 btn.innerText = '👁 Hiện đáp án & Lời giải';
-                isAnswerRevealed = false; // Cho phép click lại
-
+                isAnswerRevealed = false; 
                 const options = document.querySelectorAll('.modal-option');
-                options.forEach(optEl => {
-                    optEl.classList.remove('disabled', 'correct', 'wrong'); // Xóa màu xanh đỏ
-                });
+                options.forEach(optEl => { optEl.classList.remove('disabled', 'correct', 'wrong'); });
             }
         }
 
         function toggleSave(qId) {
             const index = currentUser.savedQuestions.indexOf(qId);
             if (index > -1) { currentUser.savedQuestions.splice(index, 1); } else { currentUser.savedQuestions.push(qId); }
-            const dbIndex = usersDB.findIndex(u => u.username === currentUser.username);
-            usersDB[dbIndex] = currentUser; saveDB();
-            localStorage.setItem('chem_current_session', JSON.stringify(currentUser));
+            syncCurrentUser();
             if (document.getElementById('pageTitle').innerText === "Câu Hỏi Đã Lưu") { openSavedQuestions(); } else { renderQuestionList(); }
         }
 

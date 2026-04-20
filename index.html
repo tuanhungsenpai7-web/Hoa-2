@@ -1,0 +1,423 @@
+<!DOCTYPE html>
+<html lang="vi">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0, maximum-scale=1.0, user-scalable=no">
+    <title>Ôn Thi Hóa Học - Hệ Thống Cá Nhân Hóa</title>
+    <!-- Nhúng file dữ liệu Hóa Học -->
+    <script src="question-data.js"></script>
+    <style>
+        :root { 
+            --primary: #00796b; --accent: #d9534f; --success: #28a745; 
+            --warning: #ffb300; --bg-light: #f4f7f6; --text-dark: #333; 
+        }
+        body { font-family: 'Segoe UI', Tahoma, sans-serif; background-color: var(--bg-light); margin: 0; color: var(--text-dark); -webkit-text-size-adjust: 100%; }
+        
+        /* Layouts */
+        #authView, #adminView, #appView { display: none; }
+        .active-view { display: block !important; }
+        .container { max-width: 800px; margin: 20px auto; padding: 0 15px; padding-bottom: 40px; }
+
+        /* HEADER CHUNG */
+        .header { background: var(--primary); color: white; padding: 15px; text-align: center; position: sticky; top: 0; z-index: 100; box-shadow: 0 2px 5px rgba(0,0,0,0.1); display: flex; justify-content: space-between; align-items: center;}
+        .header h2 { margin: 0; font-size: 18px; flex-grow: 1; text-align: center;}
+        .btn-header { background: rgba(255,255,255,0.2); color: white; border: none; padding: 8px 12px; border-radius: 6px; cursor: pointer; font-weight: bold; font-size: 13px;}
+
+        /* AUTH (Đăng nhập / Đăng ký) */
+        .auth-box { background: white; max-width: 400px; margin: 50px auto; padding: 30px; border-radius: 12px; box-shadow: 0 4px 15px rgba(0,0,0,0.1); text-align: center; }
+        .auth-input { width: 100%; padding: 12px; margin-bottom: 15px; border: 1px solid #ccc; border-radius: 8px; box-sizing: border-box; font-size: 15px; }
+        .btn-auth { width: 100%; padding: 12px; background: var(--primary); color: white; border: none; border-radius: 8px; font-size: 16px; font-weight: bold; cursor: pointer; margin-bottom: 10px;}
+        .btn-auth.secondary { background: #6c757d; }
+        .admin-link { color: #d84315; font-size: 14px; text-decoration: underline; cursor: pointer; margin-top: 15px; display: inline-block; }
+
+        /* ADMIN VIEW */
+        .admin-box { background: white; padding: 20px; border-radius: 12px; box-shadow: 0 4px 10px rgba(0,0,0,0.05); }
+        .user-row { display: flex; justify-content: space-between; align-items: center; padding: 15px; border-bottom: 1px solid #eee; }
+        .user-row:last-child { border-bottom: none; }
+        .btn-approve { background: var(--success); color: white; border: none; padding: 8px 15px; border-radius: 6px; cursor: pointer; font-weight: bold;}
+        .btn-revoke { background: var(--accent); color: white; border: none; padding: 8px 15px; border-radius: 6px; cursor: pointer; font-weight: bold;}
+
+        /* APP VIEW (Menu & Question List) */
+        #menuList, #qListContainer { display: none; }
+        .menu-grid { display: grid; gap: 15px; grid-template-columns: 1fr; margin-top: 20px;}
+        .menu-card { background: white; padding: 20px; border-radius: 12px; box-shadow: 0 4px 10px rgba(0,0,0,0.05); cursor: pointer; border-left: 5px solid var(--primary); transition: 0.2s;}
+        .menu-card.saved-card { border-left-color: var(--warning); background: #fffdf5; }
+        
+        /* Question List */
+        .q-list { display: grid; gap: 15px; margin-top: 20px;}
+        .q-card { background: white; border-radius: 12px; padding: 20px; box-shadow: 0 4px 8px rgba(0,0,0,0.08); display: flex; flex-direction: column;}
+        .q-content { cursor: pointer; font-size: 16px; font-weight: 600; line-height: 1.5; margin-bottom: 15px; flex-grow: 1;}
+        
+        .actions { display: flex; gap: 10px; border-top: 1px solid #eee; padding-top: 15px; }
+        .btn { flex: 1; padding: 12px 10px; border: none; border-radius: 8px; font-weight: bold; cursor: pointer; text-align: center; }
+        .btn-save { background: #e2e8f0; color: #333; } 
+        .btn-save.saved { background: var(--warning); color: #000; }
+
+        /* Modal (Popup) */
+        .modal-overlay { display: none; position: fixed; top: 0; left: 0; width: 100%; height: 100%; background: rgba(0,0,0,0.7); z-index: 1000; justify-content: center; align-items: center; padding: 15px; box-sizing: border-box; }
+        .modal-overlay.active { display: flex; }
+        .modal-content { background: white; width: 100%; max-width: 500px; padding: 25px 20px; border-radius: 16px; position: relative; max-height: 90vh; overflow-y: auto; }
+        .close-modal { position: absolute; top: 10px; right: 15px; font-size: 28px; cursor: pointer; color: #999; }
+        .modal-q { font-size: 17px; font-weight: bold; color: var(--primary); margin-bottom: 20px; line-height: 1.5;}
+        .modal-option { background: var(--bg-light); padding: 12px 15px; border-radius: 8px; margin-bottom: 8px; font-size: 15px; border: 1px solid #ddd; }
+        .modal-answer { background: #e8f5e9; color: #1b5e20; padding: 15px; border-radius: 8px; margin-bottom: 20px; border-left: 4px solid var(--success);}
+        .nav-actions { display: flex; gap: 10px; margin-bottom: 10px; }
+        .btn-nav { background: #6c757d; color: white; border: none; padding: 12px; border-radius: 8px; flex: 1; font-weight: bold; cursor: pointer; }
+        .btn-nav:disabled { background: #ccc; cursor: not-allowed; }
+    </style>
+</head>
+<body>
+
+    <!-- MÀN HÌNH ĐĂNG NHẬP / ĐĂNG KÝ -->
+    <div id="authView" class="active-view">
+        <div class="header"><h2>Hệ Thống Đăng Nhập</h2></div>
+        <div class="auth-box">
+            <h3 style="color:var(--primary); margin-top:0;">Chào mừng bạn</h3>
+            <input type="text" id="username" class="auth-input" placeholder="Tên đăng nhập">
+            <input type="password" id="password" class="auth-input" placeholder="Mật khẩu">
+            
+            <button class="btn-auth" onclick="login()">Đăng Nhập</button>
+            <button class="btn-auth secondary" onclick="register()">Đăng Ký Tài Khoản Mới</button>
+            
+            <div class="admin-link" onclick="openAdminLogin()">🔒 Khu vực Quản trị viên (Admin)</div>
+        </div>
+    </div>
+
+    <!-- MÀN HÌNH QUẢN TRỊ VIÊN (ADMIN) -->
+    <div id="adminView">
+        <div class="header">
+            <button class="btn-header" onclick="logout()">Đăng xuất</button>
+            <h2>Bảng Điều Khiển Admin</h2>
+            <div style="width: 70px;"></div>
+        </div>
+        <div class="container">
+            <h3 style="color: var(--primary);">Danh sách người dùng đăng ký</h3>
+            <div class="admin-box" id="adminUserList">
+                <!-- Danh sách user hiện tự động -->
+            </div>
+        </div>
+    </div>
+
+    <!-- MÀN HÌNH HỌC TẬP CHÍNH CỦA NGƯỜI DÙNG -->
+    <div id="appView">
+        <div class="header">
+            <button class="btn-header" id="backBtn" onclick="showMenu()" style="display:none;">&#8592; Trở về</button>
+            <button class="btn-header" id="logoutBtn" onclick="logout()">Đăng xuất</button>
+            <h2 id="pageTitle">Luyện Thi Hóa Học</h2>
+            <div style="width: 70px;" id="spacer"></div>
+        </div>
+        
+        <div class="container">
+            <!-- Menu các chương -->
+            <div id="menuList" class="active-view">
+                <div style="margin-bottom: 10px; font-weight:bold; color: #555;">Xin chào, <span id="currentUserDisplay" style="color:var(--primary);"></span>!</div>
+                <div class="menu-grid" id="menuGrid"></div>
+            </div>
+
+            <!-- Danh sách câu hỏi -->
+            <div id="qListContainer">
+                <div class="q-list" id="qList"></div>
+            </div>
+        </div>
+    </div>
+
+    <!-- KHUNG POPUP CÂU HỎI -->
+    <div class="modal-overlay" id="qModal">
+        <div class="modal-content">
+            <span class="close-modal" onclick="closeModal()">&times;</span>
+            <div style="font-size:13px; color:#666; margin-bottom:8px; font-weight: bold;" id="modalQNum">Câu hỏi</div>
+            <div class="modal-q" id="modalQuestion">Nội dung câu hỏi...</div>
+            <div class="modal-options" id="modalOptions"></div>
+            <div class="modal-answer" id="modalAnswerBlock">
+                <strong>Đáp án đúng:</strong> <span id="modalAnswerText"></span><br>
+                <div id="modalExplainText" style="margin-top: 8px; font-size: 14.5px; color: #333;"></div>
+            </div>
+            <div class="actions" style="margin-top: 0; margin-bottom: 20px;">
+                <button class="btn btn-save" id="modalBtnSave" onclick="toggleSaveFromModal()">☆ Lưu câu hỏi</button>
+            </div>
+            <div class="nav-actions">
+                <button class="btn-nav" id="btnPrev" onclick="prevQuestion()">&#9664; Câu trước</button>
+                <button class="btn-nav" id="btnNext" onclick="nextQuestion()" style="background: var(--primary);">Câu tiếp &#9654;</button>
+            </div>
+        </div>
+    </div>
+
+    <script>
+        /* === 1. QUẢN LÝ DỮ LIỆU CƠ SỞ CHUNG === */
+        const ADMIN_PIN = "190922"; // MÃ PIN ADMIN ĐỂ DUYỆT TÀI KHOẢN
+        let usersDB = JSON.parse(localStorage.getItem('chem_users_db')) || [];
+        let currentUser = null; // Tài khoản đang đăng nhập hiện tại
+
+        // App variables
+        let currentList = []; 
+        let currentIndex = 0;
+
+        /* === 2. CHỨC NĂNG ĐĂNG NHẬP / ĐĂNG KÝ === */
+        function register() {
+            const u = document.getElementById('username').value.trim();
+            const p = document.getElementById('password').value.trim();
+            if(!u || !p) return alert("Vui lòng nhập đầy đủ Tài khoản và Mật khẩu!");
+            
+            // Kiểm tra trùng lặp
+            const exists = usersDB.find(user => user.username === u);
+            if(exists) return alert("Tên đăng nhập này đã tồn tại! Vui lòng chọn tên khác.");
+
+            // Tạo tài khoản mới (Chưa được duyệt, savedQuestions rỗng)
+            usersDB.push({ username: u, password: p, isApproved: false, savedQuestions: [] });
+            saveDB();
+            alert("Đăng ký thành công! Hãy đợi Admin duyệt tài khoản trước khi đăng nhập.");
+            document.getElementById('username').value = '';
+            document.getElementById('password').value = '';
+        }
+
+        function login() {
+            const u = document.getElementById('username').value.trim();
+            const p = document.getElementById('password').value.trim();
+            if(!u || !p) return alert("Vui lòng nhập đầy đủ Tài khoản và Mật khẩu!");
+
+            const user = usersDB.find(user => user.username === u && user.password === p);
+            if(!user) return alert("Sai tên đăng nhập hoặc mật khẩu!");
+            
+            if(!user.isApproved) {
+                return alert("Tài khoản của bạn CHƯA ĐƯỢC DUYỆT! Vui lòng liên hệ Admin.");
+            }
+
+            // Đăng nhập thành công
+            currentUser = user;
+            document.getElementById('currentUserDisplay').innerText = currentUser.username;
+            switchMainView('appView');
+            showMenu();
+        }
+
+        function logout() {
+            currentUser = null;
+            document.getElementById('username').value = '';
+            document.getElementById('password').value = '';
+            switchMainView('authView');
+        }
+
+        function saveDB() {
+            localStorage.setItem('chem_users_db', JSON.stringify(usersDB));
+        }
+
+        /* === 3. CHỨC NĂNG ADMIN === */
+        function openAdminLogin() {
+            const pin = prompt("Nhập mã PIN của Quản trị viên:");
+            if (pin === ADMIN_PIN) {
+                renderAdminPanel();
+                switchMainView('adminView');
+            } else if (pin !== null) {
+                alert("Mã PIN không chính xác!");
+            }
+        }
+
+        function renderAdminPanel() {
+            const listDiv = document.getElementById('adminUserList');
+            listDiv.innerHTML = '';
+            
+            if(usersDB.length === 0) {
+                listDiv.innerHTML = '<div style="color:gray;">Chưa có người dùng nào đăng ký hệ thống.</div>';
+                return;
+            }
+
+            usersDB.forEach((user, index) => {
+                const statusColor = user.isApproved ? "var(--success)" : "var(--accent)";
+                const statusText = user.isApproved ? "Đã duyệt" : "Chờ duyệt";
+                const btnAction = user.isApproved 
+                    ? `<button class="btn-revoke" onclick="toggleApproval(${index}, false)">Hủy duyệt</button>`
+                    : `<button class="btn-approve" onclick="toggleApproval(${index}, true)">Cấp quyền (Duyệt)</button>`;
+
+                listDiv.innerHTML += `
+                    <div class="user-row">
+                        <div>
+                            <strong>${user.username}</strong><br>
+                            <span style="font-size:13px; color:${statusColor};">${statusText}</span>
+                        </div>
+                        <div>${btnAction}</div>
+                    </div>
+                `;
+            });
+        }
+
+        function toggleApproval(userIndex, status) {
+            usersDB[userIndex].isApproved = status;
+            saveDB();
+            renderAdminPanel();
+        }
+
+        function switchMainView(viewId) {
+            document.getElementById('authView').classList.remove('active-view');
+            document.getElementById('adminView').classList.remove('active-view');
+            document.getElementById('appView').classList.remove('active-view');
+            document.getElementById(viewId).classList.add('active-view');
+        }
+
+        /* === 4. CHỨC NĂNG HỌC TẬP (APP) DÀNH CHO USER === */
+        
+        function renderMenu() {
+            const menuGrid = document.getElementById('menuGrid');
+            menuGrid.innerHTML = '';
+
+            for (const chapId in questionDatabase) {
+                const chapter = questionDatabase[chapId];
+                menuGrid.innerHTML += `
+                    <div class="menu-card" onclick="openChapter('${chapId}')">
+                        <h3 style="margin:0 0 8px 0; color:var(--primary); font-size: 17px;">${chapter.title}</h3>
+                        <div style="font-size:14px; color:#555;">📋 Tổng số: ${chapter.questions.length} câu hỏi</div>
+                    </div>
+                `;
+            }
+
+            // Nút câu hỏi đã lưu CỦA RIÊNG USER ĐÓ
+            const savedCount = currentUser.savedQuestions.length;
+            menuGrid.innerHTML += `
+                <div class="menu-card saved-card" onclick="openSavedQuestions()">
+                    <h3 style="margin:0 0 8px 0; color:#d84315; font-size: 17px;">★ Câu hỏi đã lưu (Ôn tập)</h3>
+                    <div style="font-size:14px; color:#555;" id="savedCountText">📌 Bạn đang lưu ${savedCount} câu</div>
+                </div>
+            `;
+        }
+
+        function openChapter(chapId) {
+            const chapter = questionDatabase[chapId];
+            document.getElementById('pageTitle').innerText = chapter.title;
+            currentList = chapter.questions; 
+            switchAppView('qListContainer');
+            renderQuestionList();
+        }
+
+        function openSavedQuestions() {
+            document.getElementById('pageTitle').innerText = "Câu Hỏi Đã Lưu";
+            currentList = [];
+            
+            for (const chapId in questionDatabase) {
+                questionDatabase[chapId].questions.forEach(q => {
+                    // Kiểm tra mảng lưu cá nhân của user
+                    if(currentUser.savedQuestions.includes(q.id)) {
+                        currentList.push(q);
+                    }
+                });
+            }
+
+            if(currentList.length === 0) {
+                document.getElementById('qList').innerHTML = `<div style="text-align:center; padding: 40px; color:gray; font-size: 15px;">Bạn chưa lưu câu hỏi Hóa học nào!</div>`;
+            } else {
+                renderQuestionList();
+            }
+            switchAppView('qListContainer');
+        }
+
+        function renderQuestionList() {
+            const listDiv = document.getElementById('qList');
+            listDiv.innerHTML = '';
+
+            currentList.forEach((q, index) => {
+                const isSaved = currentUser.savedQuestions.includes(q.id);
+                const saveText = isSaved ? '★ Đã lưu (Hủy)' : '☆ Lưu câu này';
+                
+                listDiv.innerHTML += `
+                    <div class="q-card">
+                        <div class="q-content" onclick="openPopup(${index})">
+                            <span style="color:#888; font-size:13px; display:inline-block; margin-bottom:5px;">Câu ${index + 1}:</span><br>
+                            ${q.question}
+                        </div>
+                        <div class="actions">
+                            <button class="btn btn-save ${isSaved ? 'saved' : ''}" onclick="toggleSave('${q.id}')">${saveText}</button>
+                        </div>
+                    </div>
+                `;
+            });
+            const savedTextEl = document.getElementById('savedCountText');
+            if(savedTextEl) savedTextEl.innerText = `📌 Bạn đang lưu ${currentUser.savedQuestions.length} câu`;
+        }
+
+        /* === POPUP VÀ LƯU CÂU HỎI THEO TÀI KHOẢN === */
+        
+        function toggleSave(qId) {
+            const index = currentUser.savedQuestions.indexOf(qId);
+            if (index > -1) {
+                currentUser.savedQuestions.splice(index, 1); 
+            } else {
+                currentUser.savedQuestions.push(qId); 
+            }
+            
+            // Cập nhật Database tổng dựa trên user hiện tại
+            const dbIndex = usersDB.findIndex(u => u.username === currentUser.username);
+            usersDB[dbIndex] = currentUser;
+            saveDB();
+            
+            if (document.getElementById('pageTitle').innerText === "Câu Hỏi Đã Lưu") {
+                openSavedQuestions(); 
+            } else {
+                renderQuestionList(); 
+            }
+        }
+
+        function openPopup(index) {
+            currentIndex = index;
+            const q = currentList[currentIndex];
+
+            document.getElementById('modalQNum').innerText = `Câu hỏi ${currentIndex + 1} / ${currentList.length}`;
+            document.getElementById('modalQuestion').innerText = q.question;
+            
+            const optionsDiv = document.getElementById('modalOptions');
+            optionsDiv.innerHTML = '';
+            if (q.options && q.options.length > 0) {
+                q.options.forEach(opt => {
+                    optionsDiv.innerHTML += `<div class="modal-option">${opt}</div>`;
+                });
+            }
+
+            document.getElementById('modalAnswerText').innerText = q.answer;
+            document.getElementById('modalExplainText').innerText = q.explain ? `Giải thích: ${q.explain}` : '';
+
+            document.getElementById('btnPrev').disabled = (currentIndex === 0);
+            document.getElementById('btnNext').disabled = (currentIndex === currentList.length - 1);
+
+            updatePopupSaveBtn(q.id);
+            document.getElementById('qModal').classList.add('active');
+        }
+
+        function closeModal() { document.getElementById('qModal').classList.remove('active'); }
+        function nextQuestion() { if (currentIndex < currentList.length - 1) openPopup(currentIndex + 1); }
+        function prevQuestion() { if (currentIndex > 0) openPopup(currentIndex - 1); }
+
+        function toggleSaveFromModal() {
+            const currentQId = currentList[currentIndex].id;
+            toggleSave(currentQId);
+            updatePopupSaveBtn(currentQId); 
+        }
+
+        function updatePopupSaveBtn(qId) {
+            const btn = document.getElementById('modalBtnSave');
+            const isSaved = currentUser.savedQuestions.includes(qId);
+            btn.className = `btn btn-save ${isSaved ? 'saved' : ''}`;
+            btn.innerText = isSaved ? '★ Đã lưu (Hủy)' : '☆ Lưu câu này';
+        }
+
+        function switchAppView(viewId) {
+            document.getElementById('menuList').classList.remove('active-view');
+            document.getElementById('qListContainer').classList.remove('active-view');
+            document.getElementById(viewId).classList.add('active-view');
+
+            if(viewId === 'menuList') {
+                document.getElementById('backBtn').style.display = 'none';
+                document.getElementById('logoutBtn').style.display = 'inline-block';
+                document.getElementById('pageTitle').innerText = "Luyện Thi Hóa Học";
+                renderMenu(); 
+            } else {
+                document.getElementById('backBtn').style.display = 'inline-block';
+                document.getElementById('logoutBtn').style.display = 'none';
+            }
+        }
+
+        function showMenu() { switchAppView('menuList'); }
+
+        window.onclick = function(event) {
+            const modal = document.getElementById('qModal');
+            if (event.target === modal) { closeModal(); }
+        }
+
+    </script>
+</body>
+</html>

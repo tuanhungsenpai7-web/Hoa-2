@@ -3,7 +3,7 @@
 <head>
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0, maximum-scale=1.0, user-scalable=no">
-    <title>Ôn Thi Hóa Học - Hệ Thống Cá Nhân Hóa</title>
+    <title>Ôn Thi Hóa Học - Hệ Thống Trắc Nghiệm</title>
     <!-- Nhúng file dữ liệu Hóa Học -->
     <script src="question-data.js"></script>
     <style>
@@ -53,14 +53,23 @@
         .btn-save { background: #e2e8f0; color: #333; } 
         .btn-save.saved { background: var(--warning); color: #000; }
 
-        /* Modal (Popup) */
+        /* Modal (Popup Trắc Nghiệm) */
         .modal-overlay { display: none; position: fixed; top: 0; left: 0; width: 100%; height: 100%; background: rgba(0,0,0,0.7); z-index: 1000; justify-content: center; align-items: center; padding: 15px; box-sizing: border-box; }
         .modal-overlay.active { display: flex; }
         .modal-content { background: white; width: 100%; max-width: 500px; padding: 25px 20px; border-radius: 16px; position: relative; max-height: 90vh; overflow-y: auto; }
         .close-modal { position: absolute; top: 10px; right: 15px; font-size: 28px; cursor: pointer; color: #999; }
         .modal-q { font-size: 17px; font-weight: bold; color: var(--primary); margin-bottom: 20px; line-height: 1.5;}
-        .modal-option { background: var(--bg-light); padding: 12px 15px; border-radius: 8px; margin-bottom: 8px; font-size: 15px; border: 1px solid #ddd; }
-        .modal-answer { background: #e8f5e9; color: #1b5e20; padding: 15px; border-radius: 8px; margin-bottom: 20px; border-left: 4px solid var(--success);}
+        
+        /* Hiệu ứng chọn đáp án */
+        .modal-option { background: var(--bg-light); padding: 12px 15px; border-radius: 8px; margin-bottom: 8px; font-size: 15px; border: 1px solid #ddd; cursor: pointer; transition: 0.2s;}
+        .modal-option:hover { background: #e2e8f0; }
+        .modal-option.correct { background: #d4edda !important; border-color: #28a745; color: #155724; font-weight: bold; }
+        .modal-option.wrong { background: #f8d7da !important; border-color: #dc3545; color: #721c24; font-weight: bold;}
+        .modal-option.disabled { pointer-events: none; } /* Chống click nhiều lần */
+
+        .btn-toggle-ans { background: #17a2b8; color: white; border: none; padding: 12px; border-radius: 8px; width: 100%; font-weight: bold; cursor: pointer; margin-bottom: 15px; font-size: 15px;}
+        .modal-answer { background: #e8f5e9; color: #1b5e20; padding: 15px; border-radius: 8px; margin-bottom: 20px; border-left: 4px solid var(--success); display: none;}
+        
         .nav-actions { display: flex; gap: 10px; margin-bottom: 10px; }
         .btn-nav { background: #6c757d; color: white; border: none; padding: 12px; border-radius: 8px; flex: 1; font-weight: bold; cursor: pointer; }
         .btn-nav:disabled { background: #ccc; cursor: not-allowed; }
@@ -92,13 +101,11 @@
         </div>
         <div class="container">
             <h3 style="color: var(--primary);">Danh sách người dùng đăng ký</h3>
-            <div class="admin-box" id="adminUserList">
-                <!-- Danh sách user hiện tự động -->
-            </div>
+            <div class="admin-box" id="adminUserList"></div>
         </div>
     </div>
 
-    <!-- MÀN HÌNH HỌC TẬP CHÍNH CỦA NGƯỜI DÙNG -->
+    <!-- MÀN HÌNH HỌC TẬP CHÍNH -->
     <div id="appView">
         <div class="header">
             <button class="btn-header" id="backBtn" onclick="showMenu()" style="display:none;">&#8592; Trở về</button>
@@ -121,17 +128,25 @@
         </div>
     </div>
 
-    <!-- KHUNG POPUP CÂU HỎI -->
+    <!-- KHUNG POPUP TRẮC NGHIỆM -->
     <div class="modal-overlay" id="qModal">
         <div class="modal-content">
             <span class="close-modal" onclick="closeModal()">&times;</span>
             <div style="font-size:13px; color:#666; margin-bottom:8px; font-weight: bold;" id="modalQNum">Câu hỏi</div>
             <div class="modal-q" id="modalQuestion">Nội dung câu hỏi...</div>
+            
+            <!-- Vùng chứa các đáp án A B C D để click -->
             <div class="modal-options" id="modalOptions"></div>
+            
+            <!-- Nút Ẩn/Hiện đáp án -->
+            <button class="btn-toggle-ans" id="btnToggleAnswer" onclick="toggleAnswer()">👁 Hiện đáp án & Lời giải</button>
+            
+            <!-- Vùng Đáp án và Lời giải (Bị ẩn lúc ban đầu) -->
             <div class="modal-answer" id="modalAnswerBlock">
                 <strong>Đáp án đúng:</strong> <span id="modalAnswerText"></span><br>
                 <div id="modalExplainText" style="margin-top: 8px; font-size: 14.5px; color: #333;"></div>
             </div>
+
             <div class="actions" style="margin-top: 0; margin-bottom: 20px;">
                 <button class="btn btn-save" id="modalBtnSave" onclick="toggleSaveFromModal()">☆ Lưu câu hỏi</button>
             </div>
@@ -143,122 +158,77 @@
     </div>
 
     <script>
-        /* === 1. QUẢN LÝ DỮ LIỆU CƠ SỞ CHUNG === */
-        const ADMIN_PIN = "686868"; // MÃ PIN ADMIN
+        const ADMIN_PIN = "686868"; 
         let usersDB = JSON.parse(localStorage.getItem('chem_users_db')) || [];
-        // Lấy phiên đăng nhập lưu trong máy nếu có
         let currentUser = JSON.parse(localStorage.getItem('chem_current_session')) || null; 
-
         let currentList = []; 
         let currentIndex = 0;
+        let isAnswerRevealed = false; // Biến theo dõi xem đáp án đã lật hay chưa
 
-        /* KIỂM TRA ĐĂNG NHẬP TỰ ĐỘNG KHI TẢI TRANG */
         window.onload = function() {
             if (currentUser && currentUser.isApproved) {
-                // Nếu đã đăng nhập trước đó và được duyệt -> Vào thẳng
                 document.getElementById('currentUserDisplay').innerText = currentUser.username;
                 switchMainView('appView');
                 showMenu();
             } else {
-                // Nếu chưa -> Ở lại màn hình đăng nhập
                 switchMainView('authView');
             }
         };
 
-        /* === 2. CHỨC NĂNG ĐĂNG NHẬP / ĐĂNG KÝ === */
         function register() {
             const u = document.getElementById('username').value.trim();
             const p = document.getElementById('password').value.trim();
             if(!u || !p) return alert("Vui lòng nhập đầy đủ Tài khoản và Mật khẩu!");
-            
             const exists = usersDB.find(user => user.username === u);
-            if(exists) return alert("Tên đăng nhập này đã tồn tại! Vui lòng chọn tên khác.");
-
+            if(exists) return alert("Tên đăng nhập này đã tồn tại!");
             usersDB.push({ username: u, password: p, isApproved: false, savedQuestions: [] });
             saveDB();
-            alert("Đăng ký thành công! Hãy đợi Admin duyệt tài khoản trước khi đăng nhập.");
-            document.getElementById('username').value = '';
-            document.getElementById('password').value = '';
+            alert("Đăng ký thành công! Hãy đợi Admin duyệt tài khoản.");
+            document.getElementById('username').value = ''; document.getElementById('password').value = '';
         }
 
         function login() {
             const u = document.getElementById('username').value.trim();
             const p = document.getElementById('password').value.trim();
             if(!u || !p) return alert("Vui lòng nhập đầy đủ Tài khoản và Mật khẩu!");
-
             const user = usersDB.find(user => user.username === u && user.password === p);
             if(!user) return alert("Sai tên đăng nhập hoặc mật khẩu!");
-            
-            if(!user.isApproved) {
-                return alert("Tài khoản của bạn CHƯA ĐƯỢC DUYỆT! Vui lòng liên hệ Admin.");
-            }
-
-            // Đăng nhập thành công -> LƯU PHIÊN LÀM VIỆC ĐỂ TỰ ĐỘNG ĐĂNG NHẬP LẦN SAU
+            if(!user.isApproved) return alert("Tài khoản CHƯA ĐƯỢC DUYỆT!");
             currentUser = user;
             localStorage.setItem('chem_current_session', JSON.stringify(currentUser));
-            
             document.getElementById('currentUserDisplay').innerText = currentUser.username;
-            switchMainView('appView');
-            showMenu();
+            switchMainView('appView'); showMenu();
         }
 
         function logout() {
-            // XÓA PHIÊN LÀM VIỆC KHI ĐĂNG XUẤT
-            currentUser = null;
-            localStorage.removeItem('chem_current_session');
-            document.getElementById('username').value = '';
-            document.getElementById('password').value = '';
+            currentUser = null; localStorage.removeItem('chem_current_session');
+            document.getElementById('username').value = ''; document.getElementById('password').value = '';
             switchMainView('authView');
         }
 
-        function saveDB() {
-            localStorage.setItem('chem_users_db', JSON.stringify(usersDB));
-        }
+        function saveDB() { localStorage.setItem('chem_users_db', JSON.stringify(usersDB)); }
 
-        /* === 3. CHỨC NĂNG ADMIN === */
         function openAdminLogin() {
             const pin = prompt("Nhập mã PIN của Quản trị viên:");
-            if (pin === ADMIN_PIN) {
-                renderAdminPanel();
-                switchMainView('adminView');
-            } else if (pin !== null) {
-                alert("Mã PIN không chính xác!");
-            }
+            if (pin === ADMIN_PIN) { renderAdminPanel(); switchMainView('adminView'); } 
+            else if (pin !== null) { alert("Mã PIN không chính xác!"); }
         }
 
         function renderAdminPanel() {
             const listDiv = document.getElementById('adminUserList');
             listDiv.innerHTML = '';
-            
-            if(usersDB.length === 0) {
-                listDiv.innerHTML = '<div style="color:gray;">Chưa có người dùng nào đăng ký.</div>';
-                return;
-            }
-
+            if(usersDB.length === 0) return listDiv.innerHTML = '<div style="color:gray;">Chưa có người dùng nào.</div>';
             usersDB.forEach((user, index) => {
                 const statusColor = user.isApproved ? "var(--success)" : "var(--accent)";
                 const statusText = user.isApproved ? "Đã duyệt" : "Chờ duyệt";
                 const btnAction = user.isApproved 
                     ? `<button class="btn-revoke" onclick="toggleApproval(${index}, false)">Hủy duyệt</button>`
                     : `<button class="btn-approve" onclick="toggleApproval(${index}, true)">Cấp quyền</button>`;
-
-                listDiv.innerHTML += `
-                    <div class="user-row">
-                        <div>
-                            <strong>${user.username}</strong><br>
-                            <span style="font-size:13px; color:${statusColor};">${statusText}</span>
-                        </div>
-                        <div>${btnAction}</div>
-                    </div>
-                `;
+                listDiv.innerHTML += `<div class="user-row"><div><strong>${user.username}</strong><br><span style="font-size:13px; color:${statusColor};">${statusText}</span></div><div>${btnAction}</div></div>`;
             });
         }
 
-        function toggleApproval(userIndex, status) {
-            usersDB[userIndex].isApproved = status;
-            saveDB();
-            renderAdminPanel();
-        }
+        function toggleApproval(userIndex, status) { usersDB[userIndex].isApproved = status; saveDB(); renderAdminPanel(); }
 
         function switchMainView(viewId) {
             document.getElementById('authView').classList.remove('active-view');
@@ -267,123 +237,68 @@
             document.getElementById(viewId).classList.add('active-view');
         }
 
-        /* === 4. CHỨC NĂNG HỌC TẬP === */
         function renderMenu() {
-            const menuGrid = document.getElementById('menuGrid');
-            menuGrid.innerHTML = '';
-
+            const menuGrid = document.getElementById('menuGrid'); menuGrid.innerHTML = '';
             for (const chapId in questionDatabase) {
                 const chapter = questionDatabase[chapId];
-                menuGrid.innerHTML += `
-                    <div class="menu-card" onclick="openChapter('${chapId}')">
-                        <h3 style="margin:0 0 8px 0; color:var(--primary); font-size: 17px;">${chapter.title}</h3>
-                        <div style="font-size:14px; color:#555;">📋 Tổng số: ${chapter.questions.length} câu hỏi</div>
-                    </div>
-                `;
+                menuGrid.innerHTML += `<div class="menu-card" onclick="openChapter('${chapId}')"><h3 style="margin:0 0 8px 0; color:var(--primary); font-size: 17px;">${chapter.title}</h3><div style="font-size:14px; color:#555;">📋 Tổng số: ${chapter.questions.length} câu hỏi</div></div>`;
             }
-
             const savedCount = currentUser ? currentUser.savedQuestions.length : 0;
-            menuGrid.innerHTML += `
-                <div class="menu-card saved-card" onclick="openSavedQuestions()">
-                    <h3 style="margin:0 0 8px 0; color:#d84315; font-size: 17px;">★ Câu hỏi đã lưu</h3>
-                    <div style="font-size:14px; color:#555;" id="savedCountText">📌 Đang lưu ${savedCount} câu</div>
-                </div>
-            `;
+            menuGrid.innerHTML += `<div class="menu-card saved-card" onclick="openSavedQuestions()"><h3 style="margin:0 0 8px 0; color:#d84315; font-size: 17px;">★ Câu hỏi đã lưu</h3><div style="font-size:14px; color:#555;" id="savedCountText">📌 Đang lưu ${savedCount} câu</div></div>`;
         }
 
         function openChapter(chapId) {
             const chapter = questionDatabase[chapId];
             document.getElementById('pageTitle').innerText = chapter.title;
-            currentList = chapter.questions; 
-            switchAppView('qListContainer');
-            renderQuestionList();
+            currentList = chapter.questions; switchAppView('qListContainer'); renderQuestionList();
         }
 
         function openSavedQuestions() {
             document.getElementById('pageTitle').innerText = "Câu Hỏi Đã Lưu";
             currentList = [];
-            
             for (const chapId in questionDatabase) {
-                questionDatabase[chapId].questions.forEach(q => {
-                    if(currentUser.savedQuestions.includes(q.id)) {
-                        currentList.push(q);
-                    }
-                });
+                questionDatabase[chapId].questions.forEach(q => { if(currentUser.savedQuestions.includes(q.id)) currentList.push(q); });
             }
-
-            if(currentList.length === 0) {
-                document.getElementById('qList').innerHTML = `<div style="text-align:center; padding: 40px; color:gray; font-size: 15px;">Bạn chưa lưu câu hỏi Hóa học nào!</div>`;
-            } else {
-                renderQuestionList();
-            }
+            if(currentList.length === 0) document.getElementById('qList').innerHTML = `<div style="text-align:center; padding: 40px; color:gray;">Bạn chưa lưu câu hỏi Hóa học nào!</div>`;
+            else renderQuestionList();
             switchAppView('qListContainer');
         }
 
         function renderQuestionList() {
-            const listDiv = document.getElementById('qList');
-            listDiv.innerHTML = '';
-
+            const listDiv = document.getElementById('qList'); listDiv.innerHTML = '';
             currentList.forEach((q, index) => {
                 const isSaved = currentUser.savedQuestions.includes(q.id);
                 const saveText = isSaved ? '★ Đã lưu (Hủy)' : '☆ Lưu câu này';
-                
-                listDiv.innerHTML += `
-                    <div class="q-card">
-                        <div class="q-content" onclick="openPopup(${index})">
-                            <span style="color:#888; font-size:13px; display:inline-block; margin-bottom:5px;">Câu ${index + 1}:</span><br>
-                            ${q.question}
-                        </div>
-                        <div class="actions">
-                            <button class="btn btn-save ${isSaved ? 'saved' : ''}" onclick="toggleSave('${q.id}')">${saveText}</button>
-                        </div>
-                    </div>
-                `;
+                listDiv.innerHTML += `<div class="q-card"><div class="q-content" onclick="openPopup(${index})"><span style="color:#888; font-size:13px; display:inline-block; margin-bottom:5px;">Câu ${index + 1}:</span><br>${q.question}</div><div class="actions"><button class="btn btn-save ${isSaved ? 'saved' : ''}" onclick="toggleSave('${q.id}')">${saveText}</button></div></div>`;
             });
             const savedTextEl = document.getElementById('savedCountText');
             if(savedTextEl) savedTextEl.innerText = `📌 Đang lưu ${currentUser.savedQuestions.length} câu`;
         }
 
-        /* LƯU CÂU HỎI & ĐỒNG BỘ PHIÊN LÀM VIỆC */
-        function toggleSave(qId) {
-            const index = currentUser.savedQuestions.indexOf(qId);
-            if (index > -1) {
-                currentUser.savedQuestions.splice(index, 1); 
-            } else {
-                currentUser.savedQuestions.push(qId); 
-            }
-            
-            // Cập nhật Database
-            const dbIndex = usersDB.findIndex(u => u.username === currentUser.username);
-            usersDB[dbIndex] = currentUser;
-            saveDB();
-            
-            // Cập nhật lại phiên làm việc (session) để không bị mất câu đã lưu nếu F5
-            localStorage.setItem('chem_current_session', JSON.stringify(currentUser));
-            
-            if (document.getElementById('pageTitle').innerText === "Câu Hỏi Đã Lưu") {
-                openSavedQuestions(); 
-            } else {
-                renderQuestionList(); 
-            }
-        }
-
+        /* TÍNH NĂNG POPUP TRẮC NGHIỆM MỚI */
         function openPopup(index) {
             currentIndex = index;
             const q = currentList[currentIndex];
+            isAnswerRevealed = false; // Reset trạng thái chưa lật đáp án
 
             document.getElementById('modalQNum').innerText = `Câu hỏi ${currentIndex + 1} / ${currentList.length}`;
             document.getElementById('modalQuestion').innerText = q.question;
             
+            // Vẽ các đáp án có thể bấm (onclick = checkAnswer)
             const optionsDiv = document.getElementById('modalOptions');
             optionsDiv.innerHTML = '';
             if (q.options && q.options.length > 0) {
-                q.options.forEach(opt => {
-                    optionsDiv.innerHTML += `<div class="modal-option">${opt}</div>`;
+                q.options.forEach((opt, i) => {
+                    optionsDiv.innerHTML += `<div class="modal-option" id="opt_${i}" onclick="checkAnswer(${i})">${opt}</div>`;
                 });
             }
 
             document.getElementById('modalAnswerText').innerText = q.answer;
             document.getElementById('modalExplainText').innerText = q.explain ? `Giải thích: ${q.explain}` : '';
+
+            // Reset khối đáp án về trạng thái ẨN
+            document.getElementById('modalAnswerBlock').style.display = 'none';
+            document.getElementById('btnToggleAnswer').innerText = '👁 Hiện đáp án & Lời giải';
 
             document.getElementById('btnPrev').disabled = (currentIndex === 0);
             document.getElementById('btnNext').disabled = (currentIndex === currentList.length - 1);
@@ -392,45 +307,92 @@
             document.getElementById('qModal').classList.add('active');
         }
 
+        // Kiểm tra xem người dùng chọn đúng hay sai
+        function checkAnswer(selectedIndex) {
+            if (isAnswerRevealed) return; // Nếu đã lật đáp án rồi thì không cho click nữa
+            isAnswerRevealed = true;
+
+            const q = currentList[currentIndex];
+            const selectedText = q.options[selectedIndex];
+            const isCorrect = (selectedText === q.answer);
+
+            const options = document.querySelectorAll('.modal-option');
+            options.forEach((optEl, i) => {
+                optEl.classList.add('disabled'); // Khóa các nút lại
+                if (q.options[i] === q.answer) {
+                    optEl.classList.add('correct'); // Tô màu XANH cho đáp án đúng
+                }
+            });
+
+            if (!isCorrect) {
+                // Nếu chọn sai, tô màu ĐỎ cho ô vừa chọn
+                document.getElementById(`opt_${selectedIndex}`).classList.add('wrong');
+            }
+
+            // Hiện khối giải thích và đổi nút
+            document.getElementById('modalAnswerBlock').style.display = 'block';
+            document.getElementById('btnToggleAnswer').innerText = '🙈 Ẩn đáp án & Lời giải';
+        }
+
+        // Nút bấm Hiện/Ẩn thủ công
+        function toggleAnswer() {
+            const ansBlock = document.getElementById('modalAnswerBlock');
+            const btn = document.getElementById('btnToggleAnswer');
+            const q = currentList[currentIndex];
+
+            if (ansBlock.style.display === 'none') {
+                // ĐANG ẨN -> HIỆN THỊ
+                ansBlock.style.display = 'block';
+                btn.innerText = '🙈 Ẩn đáp án & Lời giải';
+                isAnswerRevealed = true; // Đã xem thì không cho click nữa
+
+                const options = document.querySelectorAll('.modal-option');
+                options.forEach((optEl, i) => {
+                    optEl.classList.add('disabled');
+                    if (q.options[i] === q.answer) {
+                        optEl.classList.add('correct');
+                    }
+                });
+            } else {
+                // ĐANG HIỆN -> ẨN ĐI (CHO LÀM LẠI HOẶC ĐỌC LẠI ĐỀ)
+                ansBlock.style.display = 'none';
+                btn.innerText = '👁 Hiện đáp án & Lời giải';
+                isAnswerRevealed = false; // Cho phép click lại
+
+                const options = document.querySelectorAll('.modal-option');
+                options.forEach(optEl => {
+                    optEl.classList.remove('disabled', 'correct', 'wrong'); // Xóa màu xanh đỏ
+                });
+            }
+        }
+
+        function toggleSave(qId) {
+            const index = currentUser.savedQuestions.indexOf(qId);
+            if (index > -1) { currentUser.savedQuestions.splice(index, 1); } else { currentUser.savedQuestions.push(qId); }
+            const dbIndex = usersDB.findIndex(u => u.username === currentUser.username);
+            usersDB[dbIndex] = currentUser; saveDB();
+            localStorage.setItem('chem_current_session', JSON.stringify(currentUser));
+            if (document.getElementById('pageTitle').innerText === "Câu Hỏi Đã Lưu") { openSavedQuestions(); } else { renderQuestionList(); }
+        }
+
         function closeModal() { document.getElementById('qModal').classList.remove('active'); }
         function nextQuestion() { if (currentIndex < currentList.length - 1) openPopup(currentIndex + 1); }
         function prevQuestion() { if (currentIndex > 0) openPopup(currentIndex - 1); }
 
-        function toggleSaveFromModal() {
-            const currentQId = currentList[currentIndex].id;
-            toggleSave(currentQId);
-            updatePopupSaveBtn(currentQId); 
-        }
-
+        function toggleSaveFromModal() { const currentQId = currentList[currentIndex].id; toggleSave(currentQId); updatePopupSaveBtn(currentQId); }
         function updatePopupSaveBtn(qId) {
-            const btn = document.getElementById('modalBtnSave');
-            const isSaved = currentUser.savedQuestions.includes(qId);
-            btn.className = `btn btn-save ${isSaved ? 'saved' : ''}`;
-            btn.innerText = isSaved ? '★ Đã lưu (Hủy)' : '☆ Lưu câu này';
+            const btn = document.getElementById('modalBtnSave'); const isSaved = currentUser.savedQuestions.includes(qId);
+            btn.className = `btn btn-save ${isSaved ? 'saved' : ''}`; btn.innerText = isSaved ? '★ Đã lưu (Hủy)' : '☆ Lưu câu này';
         }
 
         function switchAppView(viewId) {
-            document.getElementById('menuList').classList.remove('active-view');
-            document.getElementById('qListContainer').classList.remove('active-view');
-            document.getElementById(viewId).classList.add('active-view');
-
-            if(viewId === 'menuList') {
-                document.getElementById('backBtn').style.display = 'none';
-                document.getElementById('logoutBtn').style.display = 'inline-block';
-                document.getElementById('pageTitle').innerText = "Luyện Thi Hóa Học";
-                renderMenu(); 
-            } else {
-                document.getElementById('backBtn').style.display = 'inline-block';
-                document.getElementById('logoutBtn').style.display = 'none';
-            }
+            document.getElementById('menuList').classList.remove('active-view'); document.getElementById('qListContainer').classList.remove('active-view'); document.getElementById(viewId).classList.add('active-view');
+            if(viewId === 'menuList') { document.getElementById('backBtn').style.display = 'none'; document.getElementById('logoutBtn').style.display = 'inline-block'; document.getElementById('pageTitle').innerText = "Luyện Thi Hóa Học"; renderMenu(); } 
+            else { document.getElementById('backBtn').style.display = 'inline-block'; document.getElementById('logoutBtn').style.display = 'none'; }
         }
 
         function showMenu() { switchAppView('menuList'); }
-
-        window.onclick = function(event) {
-            const modal = document.getElementById('qModal');
-            if (event.target === modal) { closeModal(); }
-        }
+        window.onclick = function(event) { const modal = document.getElementById('qModal'); if (event.target === modal) { closeModal(); } }
 
     </script>
 </body>

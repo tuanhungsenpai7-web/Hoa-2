@@ -4,8 +4,11 @@
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0, maximum-scale=1.0, user-scalable=no">
     <title>Ôn Thi Hóa Học - Trắc Nghiệm & Ghi Chú</title>
-    <!-- Nhúng file dữ liệu Hóa Học -->
     <script src="question-data.js"></script>
+    
+    <script src="https://www.gstatic.com/firebasejs/10.8.1/firebase-app-compat.js"></script>
+    <script src="https://www.gstatic.com/firebasejs/10.8.1/firebase-firestore-compat.js"></script>
+
     <style>
         :root { 
             --primary: #00796b; --accent: #d9534f; --success: #28a745; 
@@ -85,7 +88,6 @@
 </head>
 <body>
 
-    <!-- MÀN HÌNH ĐĂNG NHẬP / ĐĂNG KÝ -->
     <div id="authView">
         <div class="header"><h2>Hệ Thống Đăng Nhập</h2></div>
         <div class="auth-box">
@@ -93,60 +95,53 @@
             <input type="text" id="username" class="auth-input" placeholder="Tên đăng nhập">
             <input type="password" id="password" class="auth-input" placeholder="Mật khẩu">
             
-            <button class="btn-auth" onclick="login()">Đăng Nhập</button>
-            <button class="btn-auth secondary" onclick="register()">Đăng Ký Tài Khoản Mới</button>
+            <button class="btn-auth" onclick="handleLogin()">Đăng Nhập</button>
+            <button class="btn-auth secondary" onclick="handleRegister()">Đăng Ký Tài Khoản Mới</button>
             
             <div class="admin-link" onclick="openAdminLogin()">🔒 Khu vực Quản trị viên (Admin)</div>
         </div>
     </div>
 
-    <!-- MÀN HÌNH QUẢN TRỊ VIÊN (ADMIN) -->
     <div id="adminView">
         <div class="header">
-            <button class="btn-header" onclick="logout()">Đăng xuất</button>
+            <button class="btn-header" onclick="closeAdmin()">Đóng Admin</button>
             <h2>Bảng Điều Khiển Admin</h2>
             <div style="width: 70px;"></div>
         </div>
         <div class="container">
-            <h3 style="color: var(--primary);">Danh sách người dùng đăng ký</h3>
-            <div class="admin-box" id="adminUserList"></div>
+            <h3 style="color: var(--primary);">Giám sát sinh viên Real-time</h3>
+            <div class="admin-box" id="adminUserList">Đang tải dữ liệu...</div>
         </div>
     </div>
 
-    <!-- MÀN HÌNH HỌC TẬP CHÍNH -->
     <div id="appView">
         <div class="header">
             <button class="btn-header" id="backBtn" onclick="showMenu()" style="display:none;">&#8592; Trở về</button>
-            <button class="btn-header" id="logoutBtn" onclick="logout()">Đăng xuất</button>
+            <button class="btn-header" id="logoutBtn" onclick="handleLogout()">Đăng xuất</button>
             <h2 id="pageTitle">Luyện Thi Hóa Học</h2>
             <div style="width: 70px;" id="spacer"></div>
         </div>
         
         <div class="container">
-            <!-- Menu các chương -->
             <div id="menuList">
                 <div style="margin-bottom: 10px; font-weight:bold; color: #555;">Xin chào, <span id="currentUserDisplay" style="color:var(--primary);"></span>!</div>
                 <div class="menu-grid" id="menuGrid"></div>
             </div>
 
-            <!-- Danh sách câu hỏi -->
             <div id="qListContainer">
                 <div class="q-list" id="qList"></div>
             </div>
         </div>
     </div>
 
-    <!-- KHUNG POPUP TRẮC NGHIỆM -->
     <div class="modal-overlay" id="qModal">
         <div class="modal-content">
             <span class="close-modal" onclick="closeModal()">&times;</span>
             <div style="font-size:13px; color:#666; margin-bottom:8px; font-weight: bold;" id="modalQNum">Câu hỏi</div>
             <div class="modal-q" id="modalQuestion">Nội dung câu hỏi...</div>
             
-            <!-- Vùng chứa các đáp án A B C D -->
             <div class="modal-options" id="modalOptions"></div>
             
-            <!-- VÙNG GHI CHÚ CÁ NHÂN -->
             <div class="note-section" id="noteSection">
                 <div class="note-title">📝 Ghi chú cá nhân (Công thức, mẹo giải...):</div>
                 <textarea id="modalNoteInput" class="note-textarea" placeholder="Gõ ghi chú của bạn vào đây..."></textarea>
@@ -156,10 +151,8 @@
                 </div>
             </div>
 
-            <!-- Nút Ẩn/Hiện đáp án -->
             <button class="btn-toggle-ans" id="btnToggleAnswer" onclick="toggleAnswer()">👁 Hiện đáp án & Lời giải</button>
             
-            <!-- Vùng Đáp án và Lời giải (Bị ẩn lúc ban đầu) -->
             <div class="modal-answer" id="modalAnswerBlock">
                 <strong>Đáp án đúng:</strong> <span id="modalAnswerText"></span><br>
                 <div id="modalExplainText" style="margin-top: 8px; font-size: 14.5px; color: #333;"></div>
@@ -176,16 +169,36 @@
     </div>
 
     <script>
+        // === CẤU HÌNH FIREBASE ===
+        const firebaseConfig = {
+            apiKey: "AIzaSyDt9CoUM6FiU_ImjYTDD1UwKEXcaxK0vuw",
+            authDomain: "giai-tich-3-chuong-1-hust.firebaseapp.com",
+            projectId: "giai-tich-3-chuong-1-hust",
+            storageBucket: "giai-tich-3-chuong-1-hust.firebasestorage.app",
+            messagingSenderId: "273977526322",
+            appId: "1:273977526322:web:433839123a7ea3bab2942b",
+            measurementId: "G-ERY22GZ58G"
+        };
+        firebase.initializeApp(firebaseConfig);
+        const db = firebase.firestore();
+
+        // === GLOBAL VARIABLES ===
         const ADMIN_PIN = "686868"; 
-        let usersDB = JSON.parse(localStorage.getItem('chem_users_db')) || [];
-        let currentUser = JSON.parse(localStorage.getItem('chem_current_session')) || null; 
+        let currentUser = JSON.parse(sessionStorage.getItem('chem_current_session')) || null; 
         let currentList = []; 
         let currentIndex = 0;
         let isAnswerRevealed = false; 
 
+        // Các biến giám sát (Heartbeat & Admin)
+        let heartbeatTimer = null;
+        let adminRealtimeUnsubscribe = null;
+        let adminTickTimer = null;
+        let adminUsersData = [];
+
         window.onload = function() {
             if (currentUser && currentUser.isApproved) {
                 document.getElementById('currentUserDisplay').innerText = currentUser.username;
+                startHeartbeat(); // Kích hoạt chạy ngầm ngay khi load lại trang
                 switchMainView('appView');
                 showMenu();
             } else {
@@ -193,74 +206,223 @@
             }
         };
 
-        function register() {
+        // ==========================================
+        // 1. HỆ THỐNG XÁC THỰC (Đăng ký / Đăng nhập)
+        // ==========================================
+        async function handleRegister() {
             const u = document.getElementById('username').value.trim();
             const p = document.getElementById('password').value.trim();
             if(!u || !p) return alert("Vui lòng nhập đầy đủ Tài khoản và Mật khẩu!");
-            const exists = usersDB.find(user => user.username === u);
-            if(exists) return alert("Tên đăng nhập này đã tồn tại!");
             
-            // Cập nhật cấu trúc: Thêm trường notes: {} để lưu ghi chú
-            usersDB.push({ username: u, password: p, isApproved: false, savedQuestions: [], notes: {} });
-            saveDB();
-            alert("Đăng ký thành công! Hãy đợi Admin duyệt tài khoản.");
-            document.getElementById('username').value = ''; document.getElementById('password').value = '';
+            try {
+                const userRef = db.collection('users').doc(u);
+                const docSnap = await userRef.get();
+                if(docSnap.exists) return alert("Tên đăng nhập này đã tồn tại!");
+                
+                // Khởi tạo các trường theo yêu cầu
+                await userRef.set({ 
+                    username: u, 
+                    password: p, 
+                    isApproved: false, 
+                    savedQuestions: [], 
+                    notes: {},
+                    isOnline: false,
+                    totalTime: 0,
+                    lastLoginTime: '',
+                    lastPing: 0
+                });
+                alert("Đăng ký thành công! Hãy đợi Admin duyệt tài khoản.");
+                document.getElementById('username').value = ''; 
+                document.getElementById('password').value = '';
+            } catch (err) {
+                console.error(err);
+                alert("Lỗi kết nối Server!");
+            }
         }
 
-        function login() {
+        async function handleLogin() {
             const u = document.getElementById('username').value.trim();
             const p = document.getElementById('password').value.trim();
             if(!u || !p) return alert("Vui lòng nhập đầy đủ Tài khoản và Mật khẩu!");
-            const user = usersDB.find(user => user.username === u && user.password === p);
-            if(!user) return alert("Sai tên đăng nhập hoặc mật khẩu!");
-            if(!user.isApproved) return alert("Tài khoản CHƯA ĐƯỢC DUYỆT!");
             
-            // Khởi tạo vùng nhớ ghi chú nếu tài khoản cũ chưa có
-            user.notes = user.notes || {}; 
-            
-            currentUser = user;
-            localStorage.setItem('chem_current_session', JSON.stringify(currentUser));
-            document.getElementById('currentUserDisplay').innerText = currentUser.username;
-            switchMainView('appView'); showMenu();
+            try {
+                const userRef = db.collection('users').doc(u);
+                const docSnap = await userRef.get();
+                
+                if(!docSnap.exists || docSnap.data().password !== p) {
+                    return alert("Sai tên đăng nhập hoặc mật khẩu!");
+                }
+                
+                const user = docSnap.data();
+                if(!user.isApproved) return alert("Tài khoản CHƯA ĐƯỢC DUYỆT!");
+                
+                // Cập nhật trạng thái Login
+                const now = Date.now();
+                const timeString = new Date().toLocaleString('vi-VN');
+                
+                await userRef.update({
+                    isOnline: true,
+                    lastLoginTime: timeString,
+                    lastLoginTimestamp: now, // Dùng để tính toán nếu cần
+                    lastPing: now
+                });
+                
+                // Gán vào session
+                user.isOnline = true;
+                user.notes = user.notes || {}; 
+                currentUser = user;
+                sessionStorage.setItem('chem_current_session', JSON.stringify(currentUser));
+                
+                document.getElementById('currentUserDisplay').innerText = currentUser.username;
+                startHeartbeat(); // Bắt đầu nhịp tim
+                switchMainView('appView'); 
+                showMenu();
+            } catch (err) {
+                console.error(err);
+                alert("Lỗi kết nối Server!");
+            }
         }
 
-        function logout() {
-            currentUser = null; localStorage.removeItem('chem_current_session');
-            document.getElementById('username').value = ''; document.getElementById('password').value = '';
+        async function handleLogout() {
+            if (heartbeatTimer) clearInterval(heartbeatTimer);
+            
+            if (currentUser) {
+                try {
+                    await db.collection('users').doc(currentUser.username).update({
+                        isOnline: false
+                    });
+                } catch(e) { console.error(e); }
+            }
+            
+            currentUser = null; 
+            sessionStorage.removeItem('chem_current_session');
+            document.getElementById('username').value = ''; 
+            document.getElementById('password').value = '';
             switchMainView('authView');
         }
 
-        function saveDB() { localStorage.setItem('chem_users_db', JSON.stringify(usersDB)); }
-
-        /* BẢO ĐẢM ĐỒNG BỘ DỮ LIỆU USER */
-        function syncCurrentUser() {
-            const dbIndex = usersDB.findIndex(u => u.username === currentUser.username);
-            if(dbIndex > -1) { usersDB[dbIndex] = currentUser; saveDB(); }
-            localStorage.setItem('chem_current_session', JSON.stringify(currentUser));
+        // ==========================================
+        // 2. HỆ THỐNG HEARTBEAT (Bơm thời gian mỗi 5s)
+        // ==========================================
+        function startHeartbeat() {
+            if (heartbeatTimer) clearInterval(heartbeatTimer);
+            heartbeatTimer = setInterval(async () => {
+                if (currentUser) {
+                    try {
+                        await db.collection('users').doc(currentUser.username).update({
+                            // Hàm increment nguyên bản của Firebase cộng trực tiếp trên Server
+                            totalTime: firebase.firestore.FieldValue.increment(5),
+                            lastPing: Date.now(),
+                            isOnline: true
+                        });
+                    } catch(e) {
+                        console.log("Mất kết nối tạm thời, sẽ thử lại nhịp tim sau.");
+                    }
+                }
+            }, 5000); // Mỗi 5 giây
         }
 
+        // Đẩy dữ liệu lưu câu hỏi/ghi chú lên Firebase
+        async function syncCurrentUser() {
+            if(currentUser) {
+                sessionStorage.setItem('chem_current_session', JSON.stringify(currentUser));
+                try {
+                    await db.collection('users').doc(currentUser.username).update({
+                        savedQuestions: currentUser.savedQuestions,
+                        notes: currentUser.notes
+                    });
+                } catch (e) { console.error("Lỗi đồng bộ DB", e); }
+            }
+        }
+
+        // ==========================================
+        // 3. HỆ THỐNG QUẢN TRỊ ADMIN (Real-time Ticking)
+        // ==========================================
         function openAdminLogin() {
             const pin = prompt("Nhập mã PIN của Quản trị viên:");
-            if (pin === ADMIN_PIN) { renderAdminPanel(); switchMainView('adminView'); } 
-            else if (pin !== null) { alert("Mã PIN không chính xác!"); }
+            if (pin === ADMIN_PIN) { 
+                switchMainView('adminView'); 
+                startAdminListener();
+            } else if (pin !== null) { 
+                alert("Mã PIN không chính xác!"); 
+            }
+        }
+
+        function closeAdmin() {
+            if(adminRealtimeUnsubscribe) adminRealtimeUnsubscribe();
+            if(adminTickTimer) clearInterval(adminTickTimer);
+            switchMainView('authView');
+        }
+
+        function startAdminListener() {
+            // Lắng nghe dữ liệu realtime
+            adminRealtimeUnsubscribe = db.collection('users').onSnapshot(snapshot => {
+                adminUsersData = snapshot.docs.map(doc => doc.data());
+            });
+
+            // Vòng lặp tick mỗi 1 giây để vẽ lại giao diện
+            if(adminTickTimer) clearInterval(adminTickTimer);
+            adminTickTimer = setInterval(renderAdminPanel, 1000);
         }
 
         function renderAdminPanel() {
             const listDiv = document.getElementById('adminUserList');
-            listDiv.innerHTML = '';
-            if(usersDB.length === 0) return listDiv.innerHTML = '<div style="color:gray;">Chưa có người dùng nào.</div>';
-            usersDB.forEach((user, index) => {
-                const statusColor = user.isApproved ? "var(--success)" : "var(--accent)";
-                const statusText = user.isApproved ? "Đã duyệt" : "Chờ duyệt";
+            if(adminUsersData.length === 0) {
+                listDiv.innerHTML = '<div style="color:gray;">Đang tải dữ liệu hoặc chưa có người dùng...</div>';
+                return;
+            }
+
+            let html = '';
+            adminUsersData.forEach((user) => {
+                const isApprovedText = user.isApproved ? "Đã duyệt" : "Chờ duyệt";
+                const isApprovedColor = user.isApproved ? "var(--success)" : "var(--accent)";
+                
                 const btnAction = user.isApproved 
-                    ? `<button class="btn-revoke" onclick="toggleApproval(${index}, false)">Hủy duyệt</button>`
-                    : `<button class="btn-approve" onclick="toggleApproval(${index}, true)">Cấp quyền</button>`;
-                listDiv.innerHTML += `<div class="user-row"><div><strong>${user.username}</strong><br><span style="font-size:13px; color:${statusColor};">${statusText}</span></div><div>${btnAction}</div></div>`;
+                    ? `<button class="btn-revoke" onclick="toggleApproval('${user.username}', false)">Hủy duyệt</button>`
+                    : `<button class="btn-approve" onclick="toggleApproval('${user.username}', true)">Cấp quyền</button>`;
+
+                // LOGIC ONLINE & TÍNH THỜI GIAN
+                const now = Date.now();
+                // Check Ping dưới 10 giây
+                const isOnline = (now - user.lastPing) < 10000; 
+                
+                let displaySecs = user.totalTime || 0;
+                if (isOnline) {
+                    // Để số giây tick mượt mà giữa các đợt 5 giây, ta cộng thêm phần lẻ từ lần ping cuối
+                    displaySecs += Math.floor((now - user.lastPing) / 1000);
+                }
+
+                // Chuyển đổi định dạng Giờ/Phút/Giây
+                const minutes = Math.floor(displaySecs / 60);
+                const seconds = displaySecs % 60;
+                const timeString = `${minutes} phút (${seconds} giây)`;
+
+                const statusUI = isOnline 
+                    ? `<span style="color:var(--success); font-weight:bold;">● Đang Online (${timeString})</span>`
+                    : `<span style="color:gray;">○ Offline - Đã Dừng (${timeString})</span>`;
+
+                html += `
+                <div class="user-row">
+                    <div>
+                        <strong>${user.username}</strong> 
+                        <span style="font-size:12px; color:#888;"> (Đăng nhập: ${user.lastLoginTime || 'Chưa rõ'})</span><br>
+                        <span style="font-size:13px; color:${isApprovedColor}; margin-right: 15px;">${isApprovedText}</span>
+                        <span style="font-size:13px;">${statusUI}</span>
+                    </div>
+                    <div>${btnAction}</div>
+                </div>`;
             });
+            listDiv.innerHTML = html;
         }
 
-        function toggleApproval(userIndex, status) { usersDB[userIndex].isApproved = status; saveDB(); renderAdminPanel(); }
+        async function toggleApproval(username, status) { 
+            await db.collection('users').doc(username).update({ isApproved: status });
+            // Admin panel sẽ tự động re-render do onSnapshot
+        }
 
+        // ==========================================
+        // 4. CÁC HÀM XỬ LÝ GIAO DIỆN HỌC TẬP (GIỮ NGUYÊN)
+        // ==========================================
         function switchMainView(viewId) {
             document.getElementById('authView').classList.remove('active-view');
             document.getElementById('adminView').classList.remove('active-view');
@@ -300,8 +462,6 @@
             currentList.forEach((q, index) => {
                 const isSaved = currentUser.savedQuestions.includes(q.id);
                 const saveText = isSaved ? '★ Đã lưu (Hủy)' : '☆ Lưu câu này';
-                
-                // Hiển thị icon nếu câu hỏi đó có ghi chú
                 currentUser.notes = currentUser.notes || {};
                 const hasNote = currentUser.notes[q.id] ? '<span style="color:#b28900; margin-left: 5px;">📝 (Có ghi chú)</span>' : '';
 
@@ -311,7 +471,6 @@
             if(savedTextEl) savedTextEl.innerText = `📌 Đang lưu ${currentUser.savedQuestions.length} câu`;
         }
 
-        /* TÍNH NĂNG POPUP VÀ GHI CHÚ */
         function openPopup(index) {
             currentIndex = index;
             const q = currentList[currentIndex];
@@ -328,7 +487,6 @@
                 });
             }
 
-            // LOAD GHI CHÚ (NẾU CÓ)
             currentUser.notes = currentUser.notes || {};
             const userNote = currentUser.notes[q.id] || "";
             document.getElementById('modalNoteInput').value = userNote;
@@ -347,7 +505,6 @@
             document.getElementById('qModal').classList.add('active');
         }
 
-        // HÀM LƯU GHI CHÚ
         function saveNote() {
             const q = currentList[currentIndex];
             const text = document.getElementById('modalNoteInput').value.trim();
@@ -362,12 +519,9 @@
                 document.getElementById('btnDeleteNote').style.display = "none";
             }
             syncCurrentUser();
-            
-            // Render lại danh sách câu hỏi bên ngoài để hiện chữ "Có ghi chú"
             if (document.getElementById('pageTitle').innerText === "Câu Hỏi Đã Lưu") { openSavedQuestions(); } else { renderQuestionList(); }
         }
 
-        // HÀM XÓA GHI CHÚ
         function deleteNote() {
             const q = currentList[currentIndex];
             currentUser.notes = currentUser.notes || {};
@@ -377,7 +531,6 @@
                 document.getElementById('modalNoteInput').value = "";
                 document.getElementById('btnDeleteNote').style.display = "none";
                 syncCurrentUser();
-                
                 if (document.getElementById('pageTitle').innerText === "Câu Hỏi Đã Lưu") { openSavedQuestions(); } else { renderQuestionList(); }
             }
         }

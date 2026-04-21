@@ -4,6 +4,7 @@
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0, maximum-scale=1.0, user-scalable=no">
     <title>Ôn Thi Hóa Học - Trắc Nghiệm & Ghi Chú</title>
+    
     <script src="question-data.js"></script>
     
     <script src="https://www.gstatic.com/firebasejs/10.8.1/firebase-app-compat.js"></script>
@@ -11,97 +12,219 @@
 
     <style>
         :root { 
-            --primary: #00796b; --accent: #d9534f; --success: #28a745; 
-            --warning: #ffb300; --bg-light: #f4f7f6; --text-dark: #333; 
+            --primary: #00796b; 
+            --primary-dark: #004d40;
+            --accent: #d32f2f; 
+            --success: #2e7d32; 
+            --warning: #f57f17; 
+            --bg-light: #f8fafc; 
+            --text-dark: #1e293b;
+            --text-muted: #64748b;
+            --card-bg: #ffffff;
         }
-        body { font-family: 'Segoe UI', Tahoma, sans-serif; background-color: var(--bg-light); margin: 0; color: var(--text-dark); -webkit-text-size-adjust: 100%; }
         
-        #authView, #adminView, #appView { display: none; }
-        .active-view { display: block !important; }
-        .container { max-width: 800px; margin: 20px auto; padding: 0 15px; padding-bottom: 40px; }
+        body { 
+            font-family: system-ui, -apple-system, 'Segoe UI', Roboto, Helvetica, Arial, sans-serif; 
+            background-color: var(--bg-light); 
+            margin: 0; 
+            color: var(--text-dark); 
+            -webkit-font-smoothing: antialiased;
+            line-height: 1.6;
+        }
+        
+        #authView, #adminView, #appView { display: none; min-height: 100vh; flex-direction: column; }
+        .active-view { display: flex !important; }
+        .container { max-width: 800px; margin: 0 auto; padding: 20px 15px; padding-bottom: 60px; flex-grow: 1; width: 100%; box-sizing: border-box; }
 
-        .header { background: var(--primary); color: white; padding: 15px; text-align: center; position: sticky; top: 0; z-index: 100; box-shadow: 0 2px 5px rgba(0,0,0,0.1); display: flex; justify-content: space-between; align-items: center;}
-        .header h2 { margin: 0; font-size: 18px; flex-grow: 1; text-align: center;}
-        .btn-header { background: rgba(255,255,255,0.2); color: white; border: none; padding: 8px 12px; border-radius: 6px; cursor: pointer; font-weight: bold; font-size: 13px;}
+        /* HEADER CHUNG */
+        .header { 
+            background: var(--primary); color: white; padding: 16px; 
+            position: sticky; top: 0; z-index: 100; 
+            box-shadow: 0 4px 6px -1px rgba(0,0,0,0.1); 
+            display: flex; justify-content: space-between; align-items: center;
+        }
+        .header h2 { margin: 0; font-size: 18px; flex-grow: 1; text-align: center; font-weight: 600;}
+        .btn-header { 
+            background: rgba(255,255,255,0.15); color: white; border: none; 
+            padding: 8px 14px; border-radius: 8px; cursor: pointer; 
+            font-weight: 600; font-size: 13px; transition: background 0.2s;
+            min-height: 38px;
+        }
+        .btn-header:hover { background: rgba(255,255,255,0.25); }
 
-        .auth-box { background: white; max-width: 400px; margin: 50px auto; padding: 30px; border-radius: 12px; box-shadow: 0 4px 15px rgba(0,0,0,0.1); text-align: center; }
-        .auth-input { width: 100%; padding: 12px; margin-bottom: 15px; border: 1px solid #ccc; border-radius: 8px; box-sizing: border-box; font-size: 15px; }
-        .btn-auth { width: 100%; padding: 12px; background: var(--primary); color: white; border: none; border-radius: 8px; font-size: 16px; font-weight: bold; cursor: pointer; margin-bottom: 10px;}
-        .btn-auth.secondary { background: #6c757d; }
-        .admin-link { color: #d84315; font-size: 14px; text-decoration: underline; cursor: pointer; margin-top: 15px; display: inline-block; }
+        /* BANNER CẢNH BÁO (Tối ưu UI) */
+        .warning-banner {
+            background-color: #fee2e2;
+            color: #b91c1c;
+            padding: 12px 15px;
+            text-align: center;
+            font-size: 13.5px;
+            font-weight: 500;
+            border-bottom: 1px solid #fca5a5;
+            display: flex;
+            align-items: center;
+            justify-content: center;
+            gap: 8px;
+        }
 
-        .admin-box { background: white; padding: 20px; border-radius: 12px; box-shadow: 0 4px 10px rgba(0,0,0,0.05); }
-        .user-row { display: flex; justify-content: space-between; align-items: center; padding: 15px; border-bottom: 1px solid #eee; }
+        /* FOOTER LIÊN HỆ */
+        .app-footer {
+            text-align: center;
+            padding: 24px 15px;
+            margin-top: auto;
+            color: var(--text-muted);
+            font-size: 13.5px;
+            border-top: 1px solid #e2e8f0;
+            background-color: var(--card-bg);
+        }
+        .app-footer a { color: var(--primary); text-decoration: none; font-weight: 600; }
+
+        /* AUTH (Đăng nhập / Đăng ký) */
+        .auth-wrapper { display: flex; justify-content: center; align-items: center; min-height: 80vh; padding: 15px; }
+        .auth-box { 
+            background: var(--card-bg); width: 100%; max-width: 400px; 
+            padding: 40px 30px; border-radius: 20px; 
+            box-shadow: 0 10px 25px rgba(0,0,0,0.05); text-align: center; 
+            box-sizing: border-box;
+        }
+        .auth-input { 
+            width: 100%; padding: 14px; margin-bottom: 15px; 
+            border: 1px solid #cbd5e1; border-radius: 10px; 
+            box-sizing: border-box; font-size: 16px; transition: border-color 0.2s;
+            background-color: var(--bg-light);
+        }
+        .auth-input:focus { outline: none; border-color: var(--primary); background-color: #fff; }
+        .btn-auth { 
+            width: 100%; padding: 14px; background: var(--primary); color: white; 
+            border: none; border-radius: 10px; font-size: 16px; font-weight: 600; 
+            cursor: pointer; margin-bottom: 12px; transition: 0.2s;
+        }
+        .btn-auth:active { transform: scale(0.98); }
+        .btn-auth.secondary { background: #64748b; }
+        .admin-link { color: var(--text-muted); font-size: 13px; text-decoration: underline; cursor: pointer; margin-top: 15px; display: inline-block; }
+
+        /* ADMIN VIEW */
+        .admin-box { background: white; padding: 15px; border-radius: 16px; box-shadow: 0 4px 6px -1px rgba(0,0,0,0.05); }
+        .user-row { display: flex; justify-content: space-between; align-items: center; padding: 16px 0; border-bottom: 1px solid #f1f5f9; gap: 10px;}
         .user-row:last-child { border-bottom: none; }
-        .btn-approve { background: var(--success); color: white; border: none; padding: 8px 15px; border-radius: 6px; cursor: pointer; font-weight: bold;}
-        .btn-revoke { background: var(--accent); color: white; border: none; padding: 8px 15px; border-radius: 6px; cursor: pointer; font-weight: bold;}
-        .btn-refresh { background: #17a2b8; color: white; border: none; padding: 10px 15px; border-radius: 6px; cursor: pointer; font-weight: bold; margin-bottom: 15px; width: 100%;}
+        .btn-approve { background: var(--success); color: white; border: none; padding: 10px 16px; border-radius: 8px; cursor: pointer; font-weight: bold;}
+        .btn-revoke { background: var(--accent); color: white; border: none; padding: 10px 16px; border-radius: 8px; cursor: pointer; font-weight: bold;}
+        .btn-refresh { background: #0ea5e9; color: white; border: none; padding: 14px; border-radius: 10px; cursor: pointer; font-weight: bold; margin-bottom: 20px; width: 100%; font-size: 15px;}
 
+        /* APP VIEW (Menu & Question List) */
         #menuList, #qListContainer { display: none; }
-        .menu-grid { display: grid; gap: 15px; grid-template-columns: 1fr; margin-top: 20px;}
-        .menu-card { background: white; padding: 20px; border-radius: 12px; box-shadow: 0 4px 10px rgba(0,0,0,0.05); cursor: pointer; border-left: 5px solid var(--primary); transition: 0.2s;}
-        .menu-card.saved-card { border-left-color: var(--warning); background: #fffdf5; }
+        .welcome-text { font-size: 15px; font-weight:500; color: var(--text-muted); margin-bottom: 15px; }
+        .menu-grid { display: grid; gap: 16px; grid-template-columns: 1fr; margin-top: 15px;}
+        .menu-card { 
+            background: var(--card-bg); padding: 20px; border-radius: 16px; 
+            box-shadow: 0 4px 6px -1px rgba(0,0,0,0.05); cursor: pointer; 
+            border-left: 6px solid var(--primary); transition: transform 0.2s, box-shadow 0.2s;
+        }
+        .menu-card:active { transform: translateY(2px); }
+        .menu-card h3 { margin: 0 0 8px 0; color: var(--primary-dark); font-size: 17px; }
+        .menu-card.saved-card { border-left-color: var(--warning); background: #fffbeb; }
         
-        .q-list { display: grid; gap: 15px; margin-top: 20px;}
-        .q-card { background: white; border-radius: 12px; padding: 20px; box-shadow: 0 4px 8px rgba(0,0,0,0.08); display: flex; flex-direction: column;}
-        .q-content { cursor: pointer; font-size: 16px; font-weight: 600; line-height: 1.5; margin-bottom: 15px; flex-grow: 1;}
+        /* Question List */
+        .q-list { display: grid; gap: 16px; margin-top: 15px;}
+        .q-card { 
+            background: var(--card-bg); border-radius: 16px; padding: 20px; 
+            box-shadow: 0 4px 6px -1px rgba(0,0,0,0.05); display: flex; flex-direction: column;
+        }
+        .q-content { cursor: pointer; font-size: 16px; font-weight: 500; line-height: 1.5; margin-bottom: 15px; flex-grow: 1; color: var(--text-dark);}
         
-        .actions { display: flex; gap: 10px; border-top: 1px solid #eee; padding-top: 15px; }
-        .btn { flex: 1; padding: 12px 10px; border: none; border-radius: 8px; font-weight: bold; cursor: pointer; text-align: center; }
-        .btn-save { background: #e2e8f0; color: #333; } 
-        .btn-save.saved { background: var(--warning); color: #000; }
+        .actions { display: flex; gap: 10px; border-top: 1px solid #f1f5f9; padding-top: 15px; }
+        .btn { flex: 1; padding: 12px; border: none; border-radius: 10px; font-weight: 600; font-size: 14px; cursor: pointer; text-align: center; display: flex; justify-content: center; align-items: center; gap: 5px;}
+        .btn-save { background: #f1f5f9; color: var(--text-dark); } 
+        .btn-save.saved { background: #fef3c7; color: #b45309; }
 
-        .modal-overlay { display: none; position: fixed; top: 0; left: 0; width: 100%; height: 100%; background: rgba(0,0,0,0.7); z-index: 1000; justify-content: center; align-items: center; padding: 15px; box-sizing: border-box; }
-        .modal-overlay.active { display: flex; }
-        .modal-content { background: white; width: 100%; max-width: 500px; padding: 25px 20px; border-radius: 16px; position: relative; max-height: 90vh; overflow-y: auto; }
-        .close-modal { position: absolute; top: 10px; right: 15px; font-size: 28px; cursor: pointer; color: #999; }
-        .modal-q { font-size: 17px; font-weight: bold; color: var(--primary); margin-bottom: 20px; line-height: 1.5;}
+        /* Modal (Popup Trắc Nghiệm) */
+        .modal-overlay { 
+            display: none; position: fixed; top: 0; left: 0; width: 100%; height: 100%; 
+            background: rgba(15, 23, 42, 0.7); z-index: 1000; 
+            justify-content: center; align-items: center; padding: 15px; box-sizing: border-box; 
+            backdrop-filter: blur(3px);
+        }
+        .modal-overlay.active { display: flex; animation: fadeIn 0.2s ease-out; }
+        @keyframes fadeIn { from { opacity: 0; } to { opacity: 1; } }
         
-        .modal-option { background: var(--bg-light); padding: 12px 15px; border-radius: 8px; margin-bottom: 8px; font-size: 15px; border: 1px solid #ddd; cursor: pointer; transition: 0.2s;}
-        .modal-option:hover { background: #e2e8f0; }
-        .modal-option.correct { background: #d4edda !important; border-color: #28a745; color: #155724; font-weight: bold; }
-        .modal-option.wrong { background: #f8d7da !important; border-color: #dc3545; color: #721c24; font-weight: bold;}
+        .modal-content { 
+            background: var(--card-bg); width: 100%; max-width: 500px; 
+            padding: 25px 20px; border-radius: 20px; position: relative; 
+            max-height: 92vh; overflow-y: auto; box-shadow: 0 20px 25px -5px rgba(0,0,0,0.1);
+        }
+        .close-modal { 
+            position: absolute; top: 15px; right: 20px; font-size: 28px; 
+            cursor: pointer; color: #94a3b8; line-height: 1; 
+            width: 32px; height: 32px; display: flex; justify-content: center; align-items: center;
+        }
+        .modal-q { font-size: 17px; font-weight: 600; color: var(--text-dark); margin-bottom: 20px; line-height: 1.5;}
+        
+        /* Options cho điện thoại: Nút bấm bự hơn */
+        .modal-option { 
+            background: var(--bg-light); padding: 16px; border-radius: 12px; 
+            margin-bottom: 10px; font-size: 15px; border: 1px solid #e2e8f0; 
+            cursor: pointer; transition: 0.2s; font-weight: 500;
+        }
+        .modal-option:active { background: #e2e8f0; }
+        .modal-option.correct { background: #dcfce7 !important; border-color: #22c55e; color: #166534; font-weight: 600; }
+        .modal-option.wrong { background: #fee2e2 !important; border-color: #ef4444; color: #991b1b; font-weight: 600;}
         .modal-option.disabled { pointer-events: none; }
 
-        .note-section { background: #fffde7; border: 1px dashed #ffc107; padding: 15px; border-radius: 8px; margin-bottom: 15px; }
-        .note-title { font-size: 13px; font-weight: bold; color: #b28900; margin-bottom: 5px; }
-        .note-textarea { width: 100%; height: 60px; padding: 10px; border: 1px solid #ccc; border-radius: 6px; box-sizing: border-box; font-family: inherit; font-size: 14px; resize: vertical; }
-        .btn-note { background: #ffc107; color: #000; border: none; padding: 8px 12px; border-radius: 6px; cursor: pointer; font-weight: bold; font-size: 13px; margin-top: 8px; transition: 0.2s; }
-        .btn-note:hover { background: #e0a800; }
-        .btn-note-del { background: #d9534f; color: white; border: none; padding: 8px 12px; border-radius: 6px; cursor: pointer; font-weight: bold; font-size: 13px; margin-top: 8px; margin-left: 5px; display: none; }
+        /* GHI CHÚ (NOTES) */
+        .note-section { background: #fffbeb; border: 1px solid #fde68a; padding: 16px; border-radius: 12px; margin-bottom: 20px; }
+        .note-title { font-size: 13.5px; font-weight: 600; color: #92400e; margin-bottom: 8px; }
+        .note-textarea { 
+            width: 100%; height: 70px; padding: 12px; border: 1px solid #fcd34d; 
+            border-radius: 8px; box-sizing: border-box; font-family: inherit; font-size: 14px; 
+            resize: vertical; background: #fff;
+        }
+        .note-textarea:focus { outline: none; border-color: #fbbf24; }
+        .btn-note { background: #f59e0b; color: #fff; border: none; padding: 10px 16px; border-radius: 8px; cursor: pointer; font-weight: 600; font-size: 13px; margin-top: 10px; }
+        .btn-note-del { background: #ef4444; color: white; border: none; padding: 10px 16px; border-radius: 8px; cursor: pointer; font-weight: 600; font-size: 13px; margin-top: 10px; margin-left: 8px; display: none; }
 
-        .btn-toggle-ans { background: #17a2b8; color: white; border: none; padding: 12px; border-radius: 8px; width: 100%; font-weight: bold; cursor: pointer; margin-bottom: 15px; font-size: 15px;}
-        .modal-answer { background: #e8f5e9; color: #1b5e20; padding: 15px; border-radius: 8px; margin-bottom: 20px; border-left: 4px solid var(--success); display: none;}
+        .btn-toggle-ans { 
+            background: #0ea5e9; color: white; border: none; padding: 14px; 
+            border-radius: 12px; width: 100%; font-weight: 600; cursor: pointer; 
+            margin-bottom: 20px; font-size: 15px;
+        }
+        .modal-answer { background: #f0fdf4; color: #166534; padding: 16px; border-radius: 12px; margin-bottom: 20px; border: 1px solid #bbf7d0; display: none;}
         
-        .nav-actions { display: flex; gap: 10px; margin-bottom: 10px; }
-        .btn-nav { background: #6c757d; color: white; border: none; padding: 12px; border-radius: 8px; flex: 1; font-weight: bold; cursor: pointer; }
-        .btn-nav:disabled { background: #ccc; cursor: not-allowed; }
+        .nav-actions { display: flex; gap: 12px; margin-bottom: 10px; }
+        .btn-nav { background: #64748b; color: white; border: none; padding: 14px; border-radius: 12px; flex: 1; font-weight: 600; font-size: 14px; cursor: pointer; }
+        .btn-nav:disabled { background: #cbd5e1; cursor: not-allowed; }
     </style>
 </head>
 <body>
 
-    <div id="authView">
+    <div id="authView" class="active-view">
         <div class="header"><h2>Hệ Thống Đăng Nhập</h2></div>
-        <div class="auth-box">
-            <h3 style="color:var(--primary); margin-top:0;">Chào mừng bạn</h3>
-            <input type="text" id="username" class="auth-input" placeholder="Tên đăng nhập">
-            <input type="password" id="password" class="auth-input" placeholder="Mật khẩu">
-            
-            <button class="btn-auth" onclick="handleLogin()">Đăng Nhập</button>
-            <button class="btn-auth secondary" onclick="handleRegister()">Đăng Ký Tài Khoản Mới</button>
-            
-            <div class="admin-link" onclick="openAdminLogin()">🔒 Khu vực Quản trị viên (Admin)</div>
+        <div class="auth-wrapper">
+            <div class="auth-box">
+                <h2 style="color:var(--primary-dark); margin-top:0; margin-bottom: 5px;">Xin Chào!</h2>
+                <p style="color: var(--text-muted); font-size: 14px; margin-bottom: 25px;">Vui lòng đăng nhập để tiếp tục ôn tập</p>
+                <input type="text" id="username" class="auth-input" placeholder="Tên đăng nhập">
+                <input type="password" id="password" class="auth-input" placeholder="Mật khẩu">
+                
+                <button class="btn-auth" onclick="handleLogin()">Đăng Nhập</button>
+                <button class="btn-auth secondary" onclick="handleRegister()">Đăng Ký Tài Khoản</button>
+                
+                <div class="admin-link" onclick="openAdminLogin()">🔒 Khu vực dành cho Quản trị viên</div>
+            </div>
+        </div>
+        <div class="app-footer">
+            Phát triển bởi <b>Tuấn Hùng</b><br>
+            ✉️ Hỗ trợ: <a href="mailto:tuanhungsenpai7@gmail.com">tuanhungsenpai7@gmail.com</a>
         </div>
     </div>
 
     <div id="adminView">
         <div class="header">
             <button class="btn-header" onclick="closeAdmin()">Đóng Admin</button>
-            <h2>Bảng Điều Khiển Admin</h2>
+            <h2>Bảng Điều Khiển</h2>
             <div style="width: 70px;"></div>
         </div>
         <div class="container">
-            <button class="btn-refresh" onclick="fetchAdminData()">🔄 Làm mới Dữ liệu (Tốn 1 Read/User)</button>
+            <button class="btn-refresh" onclick="fetchAdminData()">🔄 Làm mới Dữ liệu (Tiết kiệm Read)</button>
             <div class="admin-box" id="adminUserList">Vui lòng ấn Làm mới để tải dữ liệu...</div>
         </div>
     </div>
@@ -109,14 +232,17 @@
     <div id="appView">
         <div class="header">
             <button class="btn-header" id="backBtn" onclick="showMenu()" style="display:none;">&#8592; Trở về</button>
-            <button class="btn-header" id="logoutBtn" onclick="handleLogout()">Đăng xuất (Lưu Đồng Bộ)</button>
             <h2 id="pageTitle">Luyện Thi Hóa Học</h2>
-            <div style="width: 70px;" id="spacer"></div>
+            <button class="btn-header" id="logoutBtn" onclick="handleLogout()" style="background: rgba(255,255,255,0.9); color: var(--primary-dark);">Đăng xuất</button>
+        </div>
+        
+        <div class="warning-banner" id="warningBanner">
+            <span style="font-size: 18px;">⚠️</span> Nhớ <b>Đăng xuất</b> khi học xong để hệ thống lưu tiến độ của bạn nhé!
         </div>
         
         <div class="container">
             <div id="menuList">
-                <div style="margin-bottom: 10px; font-weight:bold; color: #555;">Xin chào, <span id="currentUserDisplay" style="color:var(--primary);"></span>!</div>
+                <div class="welcome-text">👋 Xin chào, <span id="currentUserDisplay" style="color:var(--primary-dark); font-weight: 700;"></span>!</div>
                 <div class="menu-grid" id="menuGrid"></div>
             </div>
 
@@ -124,18 +250,23 @@
                 <div class="q-list" id="qList"></div>
             </div>
         </div>
+
+        <div class="app-footer">
+            Phát triển bởi <b>Tuấn Hùng</b><br>
+            ✉️ Hỗ trợ: <a href="mailto:tuanhungsenpai7@gmail.com">tuanhungsenpai7@gmail.com</a>
+        </div>
     </div>
 
     <div class="modal-overlay" id="qModal">
         <div class="modal-content">
-            <span class="close-modal" onclick="closeModal()">&times;</span>
-            <div style="font-size:13px; color:#666; margin-bottom:8px; font-weight: bold;" id="modalQNum">Câu hỏi</div>
+            <div class="close-modal" onclick="closeModal()">&times;</div>
+            <div style="font-size:13px; color:var(--text-muted); margin-bottom:10px; font-weight: 600; text-transform: uppercase; letter-spacing: 0.5px;" id="modalQNum">Câu hỏi</div>
             <div class="modal-q" id="modalQuestion">Nội dung câu hỏi...</div>
             
             <div class="modal-options" id="modalOptions"></div>
             
             <div class="note-section" id="noteSection">
-                <div class="note-title">📝 Ghi chú cá nhân:</div>
+                <div class="note-title">📝 Ghi chú cá nhân (Công thức, mẹo...):</div>
                 <textarea id="modalNoteInput" class="note-textarea" placeholder="Gõ ghi chú của bạn vào đây..."></textarea>
                 <div>
                     <button class="btn-note" onclick="saveNote()">💾 Lưu Local</button>
@@ -146,8 +277,8 @@
             <button class="btn-toggle-ans" id="btnToggleAnswer" onclick="toggleAnswer()">👁 Hiện đáp án & Lời giải</button>
             
             <div class="modal-answer" id="modalAnswerBlock">
-                <strong>Đáp án đúng:</strong> <span id="modalAnswerText"></span><br>
-                <div id="modalExplainText" style="margin-top: 8px; font-size: 14.5px; color: #333;"></div>
+                <strong>Đáp án đúng:</strong> <span id="modalAnswerText" style="font-weight:bold; font-size: 16px;"></span><br>
+                <div id="modalExplainText" style="margin-top: 10px; font-size: 14.5px; color: #1e293b; border-top: 1px dashed #bbf7d0; padding-top: 10px;"></div>
             </div>
 
             <div class="actions" style="margin-top: 0; margin-bottom: 20px;">
@@ -175,14 +306,14 @@
         const db = firebase.firestore();
 
         // === GLOBAL VARIABLES ===
-        const ADMIN_PIN = "190922"; 
+        const ADMIN_PIN = "686868"; 
         let currentUser = JSON.parse(sessionStorage.getItem('chem_current_session')) || null; 
         let currentList = []; 
         let currentIndex = 0;
         let isAnswerRevealed = false; 
 
         // Biến tối ưu bộ nhớ
-        let localSessionStart = 0; // Đánh dấu lúc đồng bộ cuối cùng
+        let localSessionStart = 0; 
         let periodicSyncTimer = null;
         let adminTickTimer = null;
         let adminUsersData = [];
@@ -205,7 +336,7 @@
         async function handleRegister() {
             const u = document.getElementById('username').value.trim();
             const p = document.getElementById('password').value.trim();
-            if(!u || !p) return alert("Nhập đủ thông tin!");
+            if(!u || !p) return alert("Vui lòng nhập đủ thông tin!");
             
             try {
                 const userRef = db.collection('users').doc(u);
@@ -217,7 +348,7 @@
                     savedQuestions: [], notes: {}, isOnline: false, totalTime: 0, 
                     lastLoginTime: '', loginTimestamp: 0
                 });
-                alert("Đăng ký thành công! Hãy đợi duyệt.");
+                alert("Đăng ký thành công! Hãy đợi Admin duyệt nhé.");
                 document.getElementById('username').value = ''; document.getElementById('password').value = '';
             } catch (err) { alert("Lỗi kết nối Server!"); }
         }
@@ -225,16 +356,16 @@
         async function handleLogin() {
             const u = document.getElementById('username').value.trim();
             const p = document.getElementById('password').value.trim();
-            if(!u || !p) return alert("Nhập đủ thông tin!");
+            if(!u || !p) return alert("Vui lòng nhập đủ thông tin!");
             
             try {
                 const userRef = db.collection('users').doc(u);
                 const docSnap = await userRef.get(); // 1 Read
                 
-                if(!docSnap.exists || docSnap.data().password !== p) return alert("Sai thông tin!");
+                if(!docSnap.exists || docSnap.data().password !== p) return alert("Tên đăng nhập hoặc mật khẩu sai!");
                 
                 const user = docSnap.data();
-                if(!user.isApproved) return alert("Tài khoản CHƯA ĐƯỢC DUYỆT!");
+                if(!user.isApproved) return alert("Tài khoản của bạn CHƯA ĐƯỢC DUYỆT!");
                 
                 const now = Date.now();
                 const timeString = new Date().toLocaleString('vi-VN');
@@ -258,16 +389,13 @@
         // ==========================================
         // 2. TỐI ƯU HÓA: ĐỒNG BỘ THEO LÔ (BATCH SYNC)
         // ==========================================
-        // Thay vì 5s gọi 1 lần, chúng ta chỉ gọi khi Đăng Xuất, Đóng Web, hoặc 10 phút trôi qua.
         async function syncToCloud(isLoggingOut = false) {
             if (!currentUser) return;
             
-            // Tính số giây học được kể từ lần đồng bộ trước (chạy bằng phần cứng nội bộ)
             const timeToAdd = Math.floor((Date.now() - localSessionStart) / 1000);
-            localSessionStart = Date.now(); // Reset mốc đo
+            localSessionStart = Date.now(); 
             
             try {
-                // Tối đa 1 Write để lưu TẤT CẢ mọi thứ
                 await db.collection('users').doc(currentUser.username).update({
                     totalTime: firebase.firestore.FieldValue.increment(timeToAdd),
                     savedQuestions: currentUser.savedQuestions,
@@ -279,7 +407,7 @@
 
         function startPeriodicSync() {
             if (periodicSyncTimer) clearInterval(periodicSyncTimer);
-            // 10 phút (600.000 ms) mới đồng bộ 1 lần (Đỡ mất dữ liệu nếu cúp điện)
+            // 10 phút mới gửi 1 lần để tối ưu Reads/Writes
             periodicSyncTimer = setInterval(() => syncToCloud(false), 600000);
         }
 
@@ -292,27 +420,19 @@
             switchMainView('authView');
         }
 
-        // Tránh thất thoát thời gian khi sinh viên ấn (X) tắt luôn trình duyệt
         window.addEventListener('beforeunload', (e) => {
-            if (currentUser) {
-                // Sử dụng keepalive để trình duyệt ráng gửi API update trước khi tắt hẳn
-                const timeToAdd = Math.floor((Date.now() - localSessionStart) / 1000);
-                const url = `https://firestore.googleapis.com/v1/projects/giai-tich-3-chuong-1-hust/databases/(default)/documents/users/${currentUser.username}?updateMask.fieldPaths=totalTime&updateMask.fieldPaths=isOnline`;
-                // Logic phức tạp qua REST API để chống kẹt Offline (Tạm thời bỏ qua nếu quá khó, chỉ cảnh báo sinh viên nên ấn Đăng xuất)
-                syncToCloud(true); // Trình duyệt hiện đại có thể cho phép chạy hàm này
-            }
+            if (currentUser) { syncToCloud(true); }
         });
 
-        // Chỉ cập nhật vào SessionStorage nội bộ. Hoàn toàn 0 Write DB.
         function syncLocalOnly() {
             sessionStorage.setItem('chem_current_session', JSON.stringify(currentUser));
         }
 
         // ==========================================
-        // 3. QUẢN TRỊ VIÊN ADMIN (MANUAL FETCH)
+        // 3. QUẢN TRỊ VIÊN ADMIN
         // ==========================================
         function openAdminLogin() {
-            const pin = prompt("Mã PIN:");
+            const pin = prompt("Nhập mã PIN:");
             if (pin === ADMIN_PIN) { 
                 switchMainView('adminView'); 
                 fetchAdminData(); 
@@ -324,27 +444,26 @@
             switchMainView('authView');
         }
 
-        // Thay vì onSnapshot tốn Reads vô tận, chỉ gọi lấy dữ liệu khi nhấn "Làm mới"
         async function fetchAdminData() {
             const listDiv = document.getElementById('adminUserList');
-            listDiv.innerHTML = '<div style="color:gray;">Đang tải dữ liệu từ mây...</div>';
+            listDiv.innerHTML = '<div style="color:var(--text-muted); text-align: center; padding: 20px;">Đang tải dữ liệu từ máy chủ...</div>';
             
             try {
-                const snapshot = await db.collection('users').get(); // Cost: 1 Read per user
+                const snapshot = await db.collection('users').get(); 
                 adminUsersData = snapshot.docs.map(doc => doc.data());
                 
                 if(adminTickTimer) clearInterval(adminTickTimer);
-                adminTickTimer = setInterval(renderAdminPanel, 1000); // UI tick locally, no DB read.
-            } catch(e) { listDiv.innerHTML = 'Lỗi tải dữ liệu'; }
+                adminTickTimer = setInterval(renderAdminPanel, 1000); 
+            } catch(e) { listDiv.innerHTML = '<div style="color: red; text-align:center;">Lỗi tải dữ liệu. Hãy kiểm tra kết nối mạng.</div>'; }
         }
 
         function renderAdminPanel() {
             const listDiv = document.getElementById('adminUserList');
-            if(adminUsersData.length === 0) return listDiv.innerHTML = '<div style="color:gray;">Chưa có dữ liệu.</div>';
+            if(adminUsersData.length === 0) return listDiv.innerHTML = '<div style="color:gray;">Chưa có dữ liệu sinh viên.</div>';
 
             let html = '';
             adminUsersData.forEach((user) => {
-                const isApprovedText = user.isApproved ? "Đã duyệt" : "Chờ duyệt";
+                const isApprovedText = user.isApproved ? "✓ Đã duyệt" : "⏳ Chờ duyệt";
                 const isApprovedColor = user.isApproved ? "var(--success)" : "var(--accent)";
                 const btnAction = user.isApproved 
                     ? `<button class="btn-revoke" onclick="toggleApproval('${user.username}', false)">Hủy</button>`
@@ -356,18 +475,21 @@
                 }
 
                 const m = Math.floor(displaySecs / 60); const s = displaySecs % 60;
-                const timeString = `${m} phút (${s} giây)`;
+                const timeString = `${m} phút ${s} giây`;
 
                 const statusUI = user.isOnline 
-                    ? `<span style="color:var(--success); font-weight:bold;">● Đang Online (${timeString})</span>`
-                    : `<span style="color:gray;">○ Offline (${timeString})</span>`;
+                    ? `<span style="color:var(--success); font-weight:600;">● Đang học (${timeString})</span>`
+                    : `<span style="color:var(--text-muted);">○ Đã dừng (${timeString})</span>`;
 
                 html += `
                 <div class="user-row">
-                    <div>
-                        <strong>${user.username}</strong> <span style="font-size:12px; color:#888;"> (Đăng nhập: ${user.lastLoginTime || 'Chưa rõ'})</span><br>
-                        <span style="font-size:13px; color:${isApprovedColor}; margin-right: 15px;">${isApprovedText}</span>
-                        <span style="font-size:13px;">${statusUI}</span>
+                    <div style="flex-grow: 1;">
+                        <strong style="font-size: 16px;">${user.username}</strong> <br>
+                        <span style="font-size:12px; color:var(--text-muted);">Đăng nhập: ${user.lastLoginTime || 'Chưa rõ'}</span><br>
+                        <div style="margin-top: 5px;">
+                            <span style="font-size:13px; color:${isApprovedColor}; margin-right: 15px; font-weight: 500;">${isApprovedText}</span>
+                            <span style="font-size:13px;">${statusUI}</span>
+                        </div>
                     </div>
                     <div>${btnAction}</div>
                 </div>`;
@@ -377,11 +499,11 @@
 
         async function toggleApproval(username, status) { 
             await db.collection('users').doc(username).update({ isApproved: status });
-            fetchAdminData(); // Cập nhật lại ngay sau khi duyệt/hủy
+            fetchAdminData(); 
         }
 
         // ==========================================
-        // 4. GIAO DIỆN HỌC TẬP (LOCAL ONLY)
+        // 4. GIAO DIỆN HỌC TẬP
         // ==========================================
         function switchMainView(viewId) {
             document.getElementById('authView').classList.remove('active-view');
@@ -394,23 +516,28 @@
             const menuGrid = document.getElementById('menuGrid'); menuGrid.innerHTML = '';
             for (const chapId in questionDatabase) {
                 const chapter = questionDatabase[chapId];
-                menuGrid.innerHTML += `<div class="menu-card" onclick="openChapter('${chapId}')"><h3 style="margin:0 0 8px 0; color:var(--primary); font-size: 17px;">${chapter.title}</h3><div style="font-size:14px; color:#555;">📋 Tổng số: ${chapter.questions.length} câu</div></div>`;
+                menuGrid.innerHTML += `<div class="menu-card" onclick="openChapter('${chapId}')"><h3>${chapter.title}</h3><div style="font-size:14px; color:var(--text-muted);">📋 Tổng số: <b>${chapter.questions.length}</b> câu hỏi</div></div>`;
             }
             const savedCount = currentUser ? currentUser.savedQuestions.length : 0;
-            menuGrid.innerHTML += `<div class="menu-card saved-card" onclick="openSavedQuestions()"><h3 style="margin:0 0 8px 0; color:#d84315; font-size: 17px;">★ Câu hỏi đã lưu</h3><div style="font-size:14px; color:#555;" id="savedCountText">📌 ${savedCount} câu</div></div>`;
+            menuGrid.innerHTML += `<div class="menu-card saved-card" onclick="openSavedQuestions()"><h3 style="color:#b45309;">★ Câu hỏi đã lưu</h3><div style="font-size:14px; color:#92400e;" id="savedCountText">📌 Bạn đang có <b>${savedCount}</b> câu lưu trữ</div></div>`;
         }
 
         function openChapter(chapId) {
-            const chapter = questionDatabase[chapId]; document.getElementById('pageTitle').innerText = chapter.title;
-            currentList = chapter.questions; switchAppView('qListContainer'); renderQuestionList();
+            const chapter = questionDatabase[chapId]; 
+            document.getElementById('pageTitle').innerText = chapter.title;
+            document.getElementById('warningBanner').style.display = 'none'; // Ẩn banner khi vào làm bài
+            currentList = chapter.questions; 
+            switchAppView('qListContainer'); renderQuestionList();
         }
 
         function openSavedQuestions() {
-            document.getElementById('pageTitle').innerText = "Câu Hỏi Đã Lưu"; currentList = [];
+            document.getElementById('pageTitle').innerText = "Câu Hỏi Đã Lưu"; 
+            document.getElementById('warningBanner').style.display = 'none';
+            currentList = [];
             for (const chapId in questionDatabase) {
                 questionDatabase[chapId].questions.forEach(q => { if(currentUser.savedQuestions.includes(q.id)) currentList.push(q); });
             }
-            if(currentList.length === 0) document.getElementById('qList').innerHTML = `<div style="text-align:center; padding: 40px; color:gray;">Chưa lưu câu nào!</div>`;
+            if(currentList.length === 0) document.getElementById('qList').innerHTML = `<div style="text-align:center; padding: 40px; color:var(--text-muted);">Bạn chưa lưu câu hỏi nào!</div>`;
             else renderQuestionList();
             switchAppView('qListContainer');
         }
@@ -419,16 +546,16 @@
             const listDiv = document.getElementById('qList'); listDiv.innerHTML = '';
             currentList.forEach((q, index) => {
                 const isSaved = currentUser.savedQuestions.includes(q.id);
-                const saveText = isSaved ? '★ Đã lưu' : '☆ Lưu';
+                const saveText = isSaved ? '★ Đã lưu' : '☆ Lưu câu này';
                 currentUser.notes = currentUser.notes || {};
-                const hasNote = currentUser.notes[q.id] ? '<span style="color:#b28900; margin-left: 5px;">📝 (Có ghi chú)</span>' : '';
-                listDiv.innerHTML += `<div class="q-card"><div class="q-content" onclick="openPopup(${index})"><span style="color:#888; font-size:13px; display:inline-block; margin-bottom:5px;">Câu ${index + 1}: ${hasNote}</span><br>${q.question}</div><div class="actions"><button class="btn btn-save ${isSaved ? 'saved' : ''}" onclick="toggleSave('${q.id}')">${saveText}</button></div></div>`;
+                const hasNote = currentUser.notes[q.id] ? '<span style="color:#d97706; margin-left: 5px; font-weight: bold;">📝</span>' : '';
+                listDiv.innerHTML += `<div class="q-card"><div class="q-content" onclick="openPopup(${index})"><span style="color:var(--text-muted); font-size:13.5px; display:inline-block; margin-bottom:8px; font-weight:600;">Câu ${index + 1} ${hasNote}</span><br>${q.question}</div><div class="actions"><button class="btn btn-save ${isSaved ? 'saved' : ''}" onclick="toggleSave('${q.id}')">${saveText}</button></div></div>`;
             });
         }
 
         function openPopup(index) {
             currentIndex = index; const q = currentList[currentIndex]; isAnswerRevealed = false; 
-            document.getElementById('modalQNum').innerText = `Câu ${currentIndex + 1} / ${currentList.length}`;
+            document.getElementById('modalQNum').innerText = `Câu hỏi ${currentIndex + 1} / ${currentList.length}`;
             document.getElementById('modalQuestion').innerText = q.question;
             
             const optionsDiv = document.getElementById('modalOptions'); optionsDiv.innerHTML = '';
@@ -440,9 +567,13 @@
             document.getElementById('btnDeleteNote').style.display = userNote ? "inline-block" : "none";
 
             document.getElementById('modalAnswerText').innerText = q.answer;
-            document.getElementById('modalExplainText').innerText = q.explain ? `Giải thích: ${q.explain}` : '';
+            document.getElementById('modalExplainText').innerText = q.explain ? `Gợi ý/Giải thích: ${q.explain}` : '';
+            
+            // Nếu không có giải thích, ẩn dòng đứt khúc
+            document.getElementById('modalExplainText').style.display = q.explain ? 'block' : 'none';
+
             document.getElementById('modalAnswerBlock').style.display = 'none';
-            document.getElementById('btnToggleAnswer').innerText = '👁 Hiện đáp án';
+            document.getElementById('btnToggleAnswer').innerText = '👁 Xem đáp án';
 
             document.getElementById('btnPrev').disabled = (currentIndex === 0);
             document.getElementById('btnNext').disabled = (currentIndex === currentList.length - 1);
@@ -454,7 +585,7 @@
             currentUser.notes = currentUser.notes || {};
             if (text) { currentUser.notes[q.id] = text; document.getElementById('btnDeleteNote').style.display = "inline-block"; } 
             else { delete currentUser.notes[q.id]; document.getElementById('btnDeleteNote').style.display = "none"; }
-            syncLocalOnly(); // CHỈ LƯU LOCAL
+            syncLocalOnly(); 
             if (document.getElementById('pageTitle').innerText === "Câu Hỏi Đã Lưu") openSavedQuestions(); else renderQuestionList();
         }
 
@@ -462,7 +593,7 @@
             const q = currentList[currentIndex]; currentUser.notes = currentUser.notes || {};
             if(currentUser.notes[q.id]) {
                 delete currentUser.notes[q.id]; document.getElementById('modalNoteInput').value = ""; document.getElementById('btnDeleteNote').style.display = "none";
-                syncLocalOnly(); // CHỈ LƯU LOCAL
+                syncLocalOnly(); 
                 if (document.getElementById('pageTitle').innerText === "Câu Hỏi Đã Lưu") openSavedQuestions(); else renderQuestionList();
             }
         }
@@ -482,7 +613,7 @@
                 ansBlock.style.display = 'block'; btn.innerText = '🙈 Ẩn đáp án'; isAnswerRevealed = true; 
                 document.querySelectorAll('.modal-option').forEach((optEl, i) => { optEl.classList.add('disabled'); if (q.options[i] === q.answer) optEl.classList.add('correct'); });
             } else {
-                ansBlock.style.display = 'none'; btn.innerText = '👁 Hiện đáp án'; isAnswerRevealed = false; 
+                ansBlock.style.display = 'none'; btn.innerText = '👁 Xem đáp án'; isAnswerRevealed = false; 
                 document.querySelectorAll('.modal-option').forEach(optEl => { optEl.classList.remove('disabled', 'correct', 'wrong'); });
             }
         }
@@ -490,7 +621,7 @@
         function toggleSave(qId) {
             const index = currentUser.savedQuestions.indexOf(qId);
             if (index > -1) currentUser.savedQuestions.splice(index, 1); else currentUser.savedQuestions.push(qId);
-            syncLocalOnly(); // CHỈ LƯU LOCAL
+            syncLocalOnly(); 
             if (document.getElementById('pageTitle').innerText === "Câu Hỏi Đã Lưu") openSavedQuestions(); else renderQuestionList();
         }
 
@@ -501,17 +632,33 @@
         function toggleSaveFromModal() { const currentQId = currentList[currentIndex].id; toggleSave(currentQId); updatePopupSaveBtn(currentQId); }
         function updatePopupSaveBtn(qId) {
             const btn = document.getElementById('modalBtnSave'); const isSaved = currentUser.savedQuestions.includes(qId);
-            btn.className = `btn btn-save ${isSaved ? 'saved' : ''}`; btn.innerText = isSaved ? '★ Đã lưu' : '☆ Lưu';
+            btn.className = `btn btn-save ${isSaved ? 'saved' : ''}`; btn.innerText = isSaved ? '★ Đã lưu' : '☆ Lưu câu này';
         }
 
         function switchAppView(viewId) {
-            document.getElementById('menuList').classList.remove('active-view'); document.getElementById('qListContainer').classList.remove('active-view'); document.getElementById(viewId).classList.add('active-view');
-            if(viewId === 'menuList') { document.getElementById('backBtn').style.display = 'none'; document.getElementById('logoutBtn').style.display = 'inline-block'; document.getElementById('pageTitle').innerText = "Luyện Thi Hóa Học"; renderMenu(); } 
-            else { document.getElementById('backBtn').style.display = 'inline-block'; document.getElementById('logoutBtn').style.display = 'none'; }
+            document.getElementById('menuList').classList.remove('active-view'); 
+            document.getElementById('qListContainer').classList.remove('active-view'); 
+            document.getElementById(viewId).classList.add('active-view');
+            
+            if(viewId === 'menuList') { 
+                document.getElementById('backBtn').style.display = 'none'; 
+                document.getElementById('logoutBtn').style.display = 'block'; 
+                document.getElementById('pageTitle').innerText = "Ôn Thi Hóa Học"; 
+                document.getElementById('warningBanner').style.display = 'flex'; // Hiện banner ở menu
+                renderMenu(); 
+            } else { 
+                document.getElementById('backBtn').style.display = 'block'; 
+                document.getElementById('logoutBtn').style.display = 'none'; 
+            }
         }
 
         function showMenu() { switchAppView('menuList'); }
-        window.onclick = function(event) { const modal = document.getElementById('qModal'); if (event.target === modal) closeModal(); }
+        
+        // Đóng modal khi bấm ra ngoài vùng tối
+        window.onclick = function(event) { 
+            const modal = document.getElementById('qModal'); 
+            if (event.target === modal) closeModal(); 
+        }
     </script>
 </body>
 </html>

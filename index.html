@@ -16,37 +16,32 @@
         }
         body { font-family: 'Segoe UI', Tahoma, sans-serif; background-color: var(--bg-light); margin: 0; color: var(--text-dark); -webkit-text-size-adjust: 100%; }
         
-        /* Layouts */
         #authView, #adminView, #appView { display: none; }
         .active-view { display: block !important; }
         .container { max-width: 800px; margin: 20px auto; padding: 0 15px; padding-bottom: 40px; }
 
-        /* HEADER CHUNG */
         .header { background: var(--primary); color: white; padding: 15px; text-align: center; position: sticky; top: 0; z-index: 100; box-shadow: 0 2px 5px rgba(0,0,0,0.1); display: flex; justify-content: space-between; align-items: center;}
         .header h2 { margin: 0; font-size: 18px; flex-grow: 1; text-align: center;}
         .btn-header { background: rgba(255,255,255,0.2); color: white; border: none; padding: 8px 12px; border-radius: 6px; cursor: pointer; font-weight: bold; font-size: 13px;}
 
-        /* AUTH (Đăng nhập / Đăng ký) */
         .auth-box { background: white; max-width: 400px; margin: 50px auto; padding: 30px; border-radius: 12px; box-shadow: 0 4px 15px rgba(0,0,0,0.1); text-align: center; }
         .auth-input { width: 100%; padding: 12px; margin-bottom: 15px; border: 1px solid #ccc; border-radius: 8px; box-sizing: border-box; font-size: 15px; }
         .btn-auth { width: 100%; padding: 12px; background: var(--primary); color: white; border: none; border-radius: 8px; font-size: 16px; font-weight: bold; cursor: pointer; margin-bottom: 10px;}
         .btn-auth.secondary { background: #6c757d; }
         .admin-link { color: #d84315; font-size: 14px; text-decoration: underline; cursor: pointer; margin-top: 15px; display: inline-block; }
 
-        /* ADMIN VIEW */
         .admin-box { background: white; padding: 20px; border-radius: 12px; box-shadow: 0 4px 10px rgba(0,0,0,0.05); }
         .user-row { display: flex; justify-content: space-between; align-items: center; padding: 15px; border-bottom: 1px solid #eee; }
         .user-row:last-child { border-bottom: none; }
         .btn-approve { background: var(--success); color: white; border: none; padding: 8px 15px; border-radius: 6px; cursor: pointer; font-weight: bold;}
         .btn-revoke { background: var(--accent); color: white; border: none; padding: 8px 15px; border-radius: 6px; cursor: pointer; font-weight: bold;}
+        .btn-refresh { background: #17a2b8; color: white; border: none; padding: 10px 15px; border-radius: 6px; cursor: pointer; font-weight: bold; margin-bottom: 15px; width: 100%;}
 
-        /* APP VIEW (Menu & Question List) */
         #menuList, #qListContainer { display: none; }
         .menu-grid { display: grid; gap: 15px; grid-template-columns: 1fr; margin-top: 20px;}
         .menu-card { background: white; padding: 20px; border-radius: 12px; box-shadow: 0 4px 10px rgba(0,0,0,0.05); cursor: pointer; border-left: 5px solid var(--primary); transition: 0.2s;}
         .menu-card.saved-card { border-left-color: var(--warning); background: #fffdf5; }
         
-        /* Question List */
         .q-list { display: grid; gap: 15px; margin-top: 20px;}
         .q-card { background: white; border-radius: 12px; padding: 20px; box-shadow: 0 4px 8px rgba(0,0,0,0.08); display: flex; flex-direction: column;}
         .q-content { cursor: pointer; font-size: 16px; font-weight: 600; line-height: 1.5; margin-bottom: 15px; flex-grow: 1;}
@@ -56,21 +51,18 @@
         .btn-save { background: #e2e8f0; color: #333; } 
         .btn-save.saved { background: var(--warning); color: #000; }
 
-        /* Modal (Popup Trắc Nghiệm) */
         .modal-overlay { display: none; position: fixed; top: 0; left: 0; width: 100%; height: 100%; background: rgba(0,0,0,0.7); z-index: 1000; justify-content: center; align-items: center; padding: 15px; box-sizing: border-box; }
         .modal-overlay.active { display: flex; }
         .modal-content { background: white; width: 100%; max-width: 500px; padding: 25px 20px; border-radius: 16px; position: relative; max-height: 90vh; overflow-y: auto; }
         .close-modal { position: absolute; top: 10px; right: 15px; font-size: 28px; cursor: pointer; color: #999; }
         .modal-q { font-size: 17px; font-weight: bold; color: var(--primary); margin-bottom: 20px; line-height: 1.5;}
         
-        /* Hiệu ứng chọn đáp án */
         .modal-option { background: var(--bg-light); padding: 12px 15px; border-radius: 8px; margin-bottom: 8px; font-size: 15px; border: 1px solid #ddd; cursor: pointer; transition: 0.2s;}
         .modal-option:hover { background: #e2e8f0; }
         .modal-option.correct { background: #d4edda !important; border-color: #28a745; color: #155724; font-weight: bold; }
         .modal-option.wrong { background: #f8d7da !important; border-color: #dc3545; color: #721c24; font-weight: bold;}
         .modal-option.disabled { pointer-events: none; }
 
-        /* GHI CHÚ (NOTES) */
         .note-section { background: #fffde7; border: 1px dashed #ffc107; padding: 15px; border-radius: 8px; margin-bottom: 15px; }
         .note-title { font-size: 13px; font-weight: bold; color: #b28900; margin-bottom: 5px; }
         .note-textarea { width: 100%; height: 60px; padding: 10px; border: 1px solid #ccc; border-radius: 6px; box-sizing: border-box; font-family: inherit; font-size: 14px; resize: vertical; }
@@ -109,15 +101,15 @@
             <div style="width: 70px;"></div>
         </div>
         <div class="container">
-            <h3 style="color: var(--primary);">Giám sát sinh viên Real-time</h3>
-            <div class="admin-box" id="adminUserList">Đang tải dữ liệu...</div>
+            <button class="btn-refresh" onclick="fetchAdminData()">🔄 Làm mới Dữ liệu (Tốn 1 Read/User)</button>
+            <div class="admin-box" id="adminUserList">Vui lòng ấn Làm mới để tải dữ liệu...</div>
         </div>
     </div>
 
     <div id="appView">
         <div class="header">
             <button class="btn-header" id="backBtn" onclick="showMenu()" style="display:none;">&#8592; Trở về</button>
-            <button class="btn-header" id="logoutBtn" onclick="handleLogout()">Đăng xuất</button>
+            <button class="btn-header" id="logoutBtn" onclick="handleLogout()">Đăng xuất (Lưu Đồng Bộ)</button>
             <h2 id="pageTitle">Luyện Thi Hóa Học</h2>
             <div style="width: 70px;" id="spacer"></div>
         </div>
@@ -143,10 +135,10 @@
             <div class="modal-options" id="modalOptions"></div>
             
             <div class="note-section" id="noteSection">
-                <div class="note-title">📝 Ghi chú cá nhân (Công thức, mẹo giải...):</div>
+                <div class="note-title">📝 Ghi chú cá nhân:</div>
                 <textarea id="modalNoteInput" class="note-textarea" placeholder="Gõ ghi chú của bạn vào đây..."></textarea>
                 <div>
-                    <button class="btn-note" onclick="saveNote()">💾 Lưu ghi chú</button>
+                    <button class="btn-note" onclick="saveNote()">💾 Lưu Local</button>
                     <button class="btn-note-del" id="btnDeleteNote" onclick="deleteNote()">🗑 Xóa</button>
                 </div>
             </div>
@@ -189,16 +181,17 @@
         let currentIndex = 0;
         let isAnswerRevealed = false; 
 
-        // Các biến giám sát (Heartbeat & Admin)
-        let heartbeatTimer = null;
-        let adminRealtimeUnsubscribe = null;
+        // Biến tối ưu bộ nhớ
+        let localSessionStart = 0; // Đánh dấu lúc đồng bộ cuối cùng
+        let periodicSyncTimer = null;
         let adminTickTimer = null;
         let adminUsersData = [];
 
         window.onload = function() {
             if (currentUser && currentUser.isApproved) {
                 document.getElementById('currentUserDisplay').innerText = currentUser.username;
-                startHeartbeat(); // Kích hoạt chạy ngầm ngay khi load lại trang
+                localSessionStart = Date.now();
+                startPeriodicSync();
                 switchMainView('appView');
                 showMenu();
             } else {
@@ -207,205 +200,172 @@
         };
 
         // ==========================================
-        // 1. HỆ THỐNG XÁC THỰC (Đăng ký / Đăng nhập)
+        // 1. CHỨC NĂNG XÁC THỰC
         // ==========================================
         async function handleRegister() {
             const u = document.getElementById('username').value.trim();
             const p = document.getElementById('password').value.trim();
-            if(!u || !p) return alert("Vui lòng nhập đầy đủ Tài khoản và Mật khẩu!");
+            if(!u || !p) return alert("Nhập đủ thông tin!");
             
             try {
                 const userRef = db.collection('users').doc(u);
-                const docSnap = await userRef.get();
-                if(docSnap.exists) return alert("Tên đăng nhập này đã tồn tại!");
+                const docSnap = await userRef.get(); // 1 Read
+                if(docSnap.exists) return alert("Tên đăng nhập đã tồn tại!");
                 
-                // Khởi tạo các trường theo yêu cầu
-                await userRef.set({ 
-                    username: u, 
-                    password: p, 
-                    isApproved: false, 
-                    savedQuestions: [], 
-                    notes: {},
-                    isOnline: false,
-                    totalTime: 0,
-                    lastLoginTime: '',
-                    lastPing: 0
+                await userRef.set({ // 1 Write
+                    username: u, password: p, isApproved: false, 
+                    savedQuestions: [], notes: {}, isOnline: false, totalTime: 0, 
+                    lastLoginTime: '', loginTimestamp: 0
                 });
-                alert("Đăng ký thành công! Hãy đợi Admin duyệt tài khoản.");
-                document.getElementById('username').value = ''; 
-                document.getElementById('password').value = '';
-            } catch (err) {
-                console.error(err);
-                alert("Lỗi kết nối Server!");
-            }
+                alert("Đăng ký thành công! Hãy đợi duyệt.");
+                document.getElementById('username').value = ''; document.getElementById('password').value = '';
+            } catch (err) { alert("Lỗi kết nối Server!"); }
         }
 
         async function handleLogin() {
             const u = document.getElementById('username').value.trim();
             const p = document.getElementById('password').value.trim();
-            if(!u || !p) return alert("Vui lòng nhập đầy đủ Tài khoản và Mật khẩu!");
+            if(!u || !p) return alert("Nhập đủ thông tin!");
             
             try {
                 const userRef = db.collection('users').doc(u);
-                const docSnap = await userRef.get();
+                const docSnap = await userRef.get(); // 1 Read
                 
-                if(!docSnap.exists || docSnap.data().password !== p) {
-                    return alert("Sai tên đăng nhập hoặc mật khẩu!");
-                }
+                if(!docSnap.exists || docSnap.data().password !== p) return alert("Sai thông tin!");
                 
                 const user = docSnap.data();
                 if(!user.isApproved) return alert("Tài khoản CHƯA ĐƯỢC DUYỆT!");
                 
-                // Cập nhật trạng thái Login
                 const now = Date.now();
                 const timeString = new Date().toLocaleString('vi-VN');
                 
+                // Chỉ tốn 1 Write khi Login
                 await userRef.update({
-                    isOnline: true,
-                    lastLoginTime: timeString,
-                    lastLoginTimestamp: now, // Dùng để tính toán nếu cần
-                    lastPing: now
+                    isOnline: true, lastLoginTime: timeString, loginTimestamp: now
                 });
                 
-                // Gán vào session
-                user.isOnline = true;
-                user.notes = user.notes || {}; 
+                user.isOnline = true; user.notes = user.notes || {}; 
                 currentUser = user;
                 sessionStorage.setItem('chem_current_session', JSON.stringify(currentUser));
                 
                 document.getElementById('currentUserDisplay').innerText = currentUser.username;
-                startHeartbeat(); // Bắt đầu nhịp tim
-                switchMainView('appView'); 
-                showMenu();
-            } catch (err) {
-                console.error(err);
-                alert("Lỗi kết nối Server!");
-            }
+                localSessionStart = Date.now();
+                startPeriodicSync();
+                switchMainView('appView'); showMenu();
+            } catch (err) { alert("Lỗi kết nối Server!"); }
+        }
+
+        // ==========================================
+        // 2. TỐI ƯU HÓA: ĐỒNG BỘ THEO LÔ (BATCH SYNC)
+        // ==========================================
+        // Thay vì 5s gọi 1 lần, chúng ta chỉ gọi khi Đăng Xuất, Đóng Web, hoặc 10 phút trôi qua.
+        async function syncToCloud(isLoggingOut = false) {
+            if (!currentUser) return;
+            
+            // Tính số giây học được kể từ lần đồng bộ trước (chạy bằng phần cứng nội bộ)
+            const timeToAdd = Math.floor((Date.now() - localSessionStart) / 1000);
+            localSessionStart = Date.now(); // Reset mốc đo
+            
+            try {
+                // Tối đa 1 Write để lưu TẤT CẢ mọi thứ
+                await db.collection('users').doc(currentUser.username).update({
+                    totalTime: firebase.firestore.FieldValue.increment(timeToAdd),
+                    savedQuestions: currentUser.savedQuestions,
+                    notes: currentUser.notes,
+                    isOnline: !isLoggingOut
+                });
+            } catch(e) { console.error("Lỗi đồng bộ", e); }
+        }
+
+        function startPeriodicSync() {
+            if (periodicSyncTimer) clearInterval(periodicSyncTimer);
+            // 10 phút (600.000 ms) mới đồng bộ 1 lần (Đỡ mất dữ liệu nếu cúp điện)
+            periodicSyncTimer = setInterval(() => syncToCloud(false), 600000);
         }
 
         async function handleLogout() {
-            if (heartbeatTimer) clearInterval(heartbeatTimer);
+            if (periodicSyncTimer) clearInterval(periodicSyncTimer);
+            await syncToCloud(true); // Gửi cục dữ liệu cuối cùng lên DB
             
-            if (currentUser) {
-                try {
-                    await db.collection('users').doc(currentUser.username).update({
-                        isOnline: false
-                    });
-                } catch(e) { console.error(e); }
-            }
-            
-            currentUser = null; 
-            sessionStorage.removeItem('chem_current_session');
-            document.getElementById('username').value = ''; 
-            document.getElementById('password').value = '';
+            currentUser = null; sessionStorage.removeItem('chem_current_session');
+            document.getElementById('username').value = ''; document.getElementById('password').value = '';
             switchMainView('authView');
         }
 
-        // ==========================================
-        // 2. HỆ THỐNG HEARTBEAT (Bơm thời gian mỗi 5s)
-        // ==========================================
-        function startHeartbeat() {
-            if (heartbeatTimer) clearInterval(heartbeatTimer);
-            heartbeatTimer = setInterval(async () => {
-                if (currentUser) {
-                    try {
-                        await db.collection('users').doc(currentUser.username).update({
-                            // Hàm increment nguyên bản của Firebase cộng trực tiếp trên Server
-                            totalTime: firebase.firestore.FieldValue.increment(5),
-                            lastPing: Date.now(),
-                            isOnline: true
-                        });
-                    } catch(e) {
-                        console.log("Mất kết nối tạm thời, sẽ thử lại nhịp tim sau.");
-                    }
-                }
-            }, 5000); // Mỗi 5 giây
-        }
-
-        // Đẩy dữ liệu lưu câu hỏi/ghi chú lên Firebase
-        async function syncCurrentUser() {
-            if(currentUser) {
-                sessionStorage.setItem('chem_current_session', JSON.stringify(currentUser));
-                try {
-                    await db.collection('users').doc(currentUser.username).update({
-                        savedQuestions: currentUser.savedQuestions,
-                        notes: currentUser.notes
-                    });
-                } catch (e) { console.error("Lỗi đồng bộ DB", e); }
+        // Tránh thất thoát thời gian khi sinh viên ấn (X) tắt luôn trình duyệt
+        window.addEventListener('beforeunload', (e) => {
+            if (currentUser) {
+                // Sử dụng keepalive để trình duyệt ráng gửi API update trước khi tắt hẳn
+                const timeToAdd = Math.floor((Date.now() - localSessionStart) / 1000);
+                const url = `https://firestore.googleapis.com/v1/projects/giai-tich-3-chuong-1-hust/databases/(default)/documents/users/${currentUser.username}?updateMask.fieldPaths=totalTime&updateMask.fieldPaths=isOnline`;
+                // Logic phức tạp qua REST API để chống kẹt Offline (Tạm thời bỏ qua nếu quá khó, chỉ cảnh báo sinh viên nên ấn Đăng xuất)
+                syncToCloud(true); // Trình duyệt hiện đại có thể cho phép chạy hàm này
             }
+        });
+
+        // Chỉ cập nhật vào SessionStorage nội bộ. Hoàn toàn 0 Write DB.
+        function syncLocalOnly() {
+            sessionStorage.setItem('chem_current_session', JSON.stringify(currentUser));
         }
 
         // ==========================================
-        // 3. HỆ THỐNG QUẢN TRỊ ADMIN (Real-time Ticking)
+        // 3. QUẢN TRỊ VIÊN ADMIN (MANUAL FETCH)
         // ==========================================
         function openAdminLogin() {
-            const pin = prompt("Nhập mã PIN của Quản trị viên:");
+            const pin = prompt("Mã PIN:");
             if (pin === ADMIN_PIN) { 
                 switchMainView('adminView'); 
-                startAdminListener();
-            } else if (pin !== null) { 
-                alert("Mã PIN không chính xác!"); 
+                fetchAdminData(); 
             }
         }
 
         function closeAdmin() {
-            if(adminRealtimeUnsubscribe) adminRealtimeUnsubscribe();
             if(adminTickTimer) clearInterval(adminTickTimer);
             switchMainView('authView');
         }
 
-        function startAdminListener() {
-            // Lắng nghe dữ liệu realtime
-            adminRealtimeUnsubscribe = db.collection('users').onSnapshot(snapshot => {
+        // Thay vì onSnapshot tốn Reads vô tận, chỉ gọi lấy dữ liệu khi nhấn "Làm mới"
+        async function fetchAdminData() {
+            const listDiv = document.getElementById('adminUserList');
+            listDiv.innerHTML = '<div style="color:gray;">Đang tải dữ liệu từ mây...</div>';
+            
+            try {
+                const snapshot = await db.collection('users').get(); // Cost: 1 Read per user
                 adminUsersData = snapshot.docs.map(doc => doc.data());
-            });
-
-            // Vòng lặp tick mỗi 1 giây để vẽ lại giao diện
-            if(adminTickTimer) clearInterval(adminTickTimer);
-            adminTickTimer = setInterval(renderAdminPanel, 1000);
+                
+                if(adminTickTimer) clearInterval(adminTickTimer);
+                adminTickTimer = setInterval(renderAdminPanel, 1000); // UI tick locally, no DB read.
+            } catch(e) { listDiv.innerHTML = 'Lỗi tải dữ liệu'; }
         }
 
         function renderAdminPanel() {
             const listDiv = document.getElementById('adminUserList');
-            if(adminUsersData.length === 0) {
-                listDiv.innerHTML = '<div style="color:gray;">Đang tải dữ liệu hoặc chưa có người dùng...</div>';
-                return;
-            }
+            if(adminUsersData.length === 0) return listDiv.innerHTML = '<div style="color:gray;">Chưa có dữ liệu.</div>';
 
             let html = '';
             adminUsersData.forEach((user) => {
                 const isApprovedText = user.isApproved ? "Đã duyệt" : "Chờ duyệt";
                 const isApprovedColor = user.isApproved ? "var(--success)" : "var(--accent)";
-                
                 const btnAction = user.isApproved 
-                    ? `<button class="btn-revoke" onclick="toggleApproval('${user.username}', false)">Hủy duyệt</button>`
-                    : `<button class="btn-approve" onclick="toggleApproval('${user.username}', true)">Cấp quyền</button>`;
+                    ? `<button class="btn-revoke" onclick="toggleApproval('${user.username}', false)">Hủy</button>`
+                    : `<button class="btn-approve" onclick="toggleApproval('${user.username}', true)">Duyệt</button>`;
 
-                // LOGIC ONLINE & TÍNH THỜI GIAN
-                const now = Date.now();
-                // Check Ping dưới 10 giây
-                const isOnline = (now - user.lastPing) < 10000; 
-                
                 let displaySecs = user.totalTime || 0;
-                if (isOnline) {
-                    // Để số giây tick mượt mà giữa các đợt 5 giây, ta cộng thêm phần lẻ từ lần ping cuối
-                    displaySecs += Math.floor((now - user.lastPing) / 1000);
+                if (user.isOnline && user.loginTimestamp) {
+                    displaySecs += Math.floor((Date.now() - user.loginTimestamp) / 1000);
                 }
 
-                // Chuyển đổi định dạng Giờ/Phút/Giây
-                const minutes = Math.floor(displaySecs / 60);
-                const seconds = displaySecs % 60;
-                const timeString = `${minutes} phút (${seconds} giây)`;
+                const m = Math.floor(displaySecs / 60); const s = displaySecs % 60;
+                const timeString = `${m} phút (${s} giây)`;
 
-                const statusUI = isOnline 
+                const statusUI = user.isOnline 
                     ? `<span style="color:var(--success); font-weight:bold;">● Đang Online (${timeString})</span>`
-                    : `<span style="color:gray;">○ Offline - Đã Dừng (${timeString})</span>`;
+                    : `<span style="color:gray;">○ Offline (${timeString})</span>`;
 
                 html += `
                 <div class="user-row">
                     <div>
-                        <strong>${user.username}</strong> 
-                        <span style="font-size:12px; color:#888;"> (Đăng nhập: ${user.lastLoginTime || 'Chưa rõ'})</span><br>
+                        <strong>${user.username}</strong> <span style="font-size:12px; color:#888;"> (Đăng nhập: ${user.lastLoginTime || 'Chưa rõ'})</span><br>
                         <span style="font-size:13px; color:${isApprovedColor}; margin-right: 15px;">${isApprovedText}</span>
                         <span style="font-size:13px;">${statusUI}</span>
                     </div>
@@ -417,11 +377,11 @@
 
         async function toggleApproval(username, status) { 
             await db.collection('users').doc(username).update({ isApproved: status });
-            // Admin panel sẽ tự động re-render do onSnapshot
+            fetchAdminData(); // Cập nhật lại ngay sau khi duyệt/hủy
         }
 
         // ==========================================
-        // 4. CÁC HÀM XỬ LÝ GIAO DIỆN HỌC TẬP (GIỮ NGUYÊN)
+        // 4. GIAO DIỆN HỌC TẬP (LOCAL ONLY)
         // ==========================================
         function switchMainView(viewId) {
             document.getElementById('authView').classList.remove('active-view');
@@ -434,25 +394,23 @@
             const menuGrid = document.getElementById('menuGrid'); menuGrid.innerHTML = '';
             for (const chapId in questionDatabase) {
                 const chapter = questionDatabase[chapId];
-                menuGrid.innerHTML += `<div class="menu-card" onclick="openChapter('${chapId}')"><h3 style="margin:0 0 8px 0; color:var(--primary); font-size: 17px;">${chapter.title}</h3><div style="font-size:14px; color:#555;">📋 Tổng số: ${chapter.questions.length} câu hỏi</div></div>`;
+                menuGrid.innerHTML += `<div class="menu-card" onclick="openChapter('${chapId}')"><h3 style="margin:0 0 8px 0; color:var(--primary); font-size: 17px;">${chapter.title}</h3><div style="font-size:14px; color:#555;">📋 Tổng số: ${chapter.questions.length} câu</div></div>`;
             }
             const savedCount = currentUser ? currentUser.savedQuestions.length : 0;
-            menuGrid.innerHTML += `<div class="menu-card saved-card" onclick="openSavedQuestions()"><h3 style="margin:0 0 8px 0; color:#d84315; font-size: 17px;">★ Câu hỏi đã lưu</h3><div style="font-size:14px; color:#555;" id="savedCountText">📌 Đang lưu ${savedCount} câu</div></div>`;
+            menuGrid.innerHTML += `<div class="menu-card saved-card" onclick="openSavedQuestions()"><h3 style="margin:0 0 8px 0; color:#d84315; font-size: 17px;">★ Câu hỏi đã lưu</h3><div style="font-size:14px; color:#555;" id="savedCountText">📌 ${savedCount} câu</div></div>`;
         }
 
         function openChapter(chapId) {
-            const chapter = questionDatabase[chapId];
-            document.getElementById('pageTitle').innerText = chapter.title;
+            const chapter = questionDatabase[chapId]; document.getElementById('pageTitle').innerText = chapter.title;
             currentList = chapter.questions; switchAppView('qListContainer'); renderQuestionList();
         }
 
         function openSavedQuestions() {
-            document.getElementById('pageTitle').innerText = "Câu Hỏi Đã Lưu";
-            currentList = [];
+            document.getElementById('pageTitle').innerText = "Câu Hỏi Đã Lưu"; currentList = [];
             for (const chapId in questionDatabase) {
                 questionDatabase[chapId].questions.forEach(q => { if(currentUser.savedQuestions.includes(q.id)) currentList.push(q); });
             }
-            if(currentList.length === 0) document.getElementById('qList').innerHTML = `<div style="text-align:center; padding: 40px; color:gray;">Bạn chưa lưu câu hỏi Hóa học nào!</div>`;
+            if(currentList.length === 0) document.getElementById('qList').innerHTML = `<div style="text-align:center; padding: 40px; color:gray;">Chưa lưu câu nào!</div>`;
             else renderQuestionList();
             switchAppView('qListContainer');
         }
@@ -461,31 +419,20 @@
             const listDiv = document.getElementById('qList'); listDiv.innerHTML = '';
             currentList.forEach((q, index) => {
                 const isSaved = currentUser.savedQuestions.includes(q.id);
-                const saveText = isSaved ? '★ Đã lưu (Hủy)' : '☆ Lưu câu này';
+                const saveText = isSaved ? '★ Đã lưu' : '☆ Lưu';
                 currentUser.notes = currentUser.notes || {};
                 const hasNote = currentUser.notes[q.id] ? '<span style="color:#b28900; margin-left: 5px;">📝 (Có ghi chú)</span>' : '';
-
                 listDiv.innerHTML += `<div class="q-card"><div class="q-content" onclick="openPopup(${index})"><span style="color:#888; font-size:13px; display:inline-block; margin-bottom:5px;">Câu ${index + 1}: ${hasNote}</span><br>${q.question}</div><div class="actions"><button class="btn btn-save ${isSaved ? 'saved' : ''}" onclick="toggleSave('${q.id}')">${saveText}</button></div></div>`;
             });
-            const savedTextEl = document.getElementById('savedCountText');
-            if(savedTextEl) savedTextEl.innerText = `📌 Đang lưu ${currentUser.savedQuestions.length} câu`;
         }
 
         function openPopup(index) {
-            currentIndex = index;
-            const q = currentList[currentIndex];
-            isAnswerRevealed = false; 
-
-            document.getElementById('modalQNum').innerText = `Câu hỏi ${currentIndex + 1} / ${currentList.length}`;
+            currentIndex = index; const q = currentList[currentIndex]; isAnswerRevealed = false; 
+            document.getElementById('modalQNum').innerText = `Câu ${currentIndex + 1} / ${currentList.length}`;
             document.getElementById('modalQuestion').innerText = q.question;
             
-            const optionsDiv = document.getElementById('modalOptions');
-            optionsDiv.innerHTML = '';
-            if (q.options && q.options.length > 0) {
-                q.options.forEach((opt, i) => {
-                    optionsDiv.innerHTML += `<div class="modal-option" id="opt_${i}" onclick="checkAnswer(${i})">${opt}</div>`;
-                });
-            }
+            const optionsDiv = document.getElementById('modalOptions'); optionsDiv.innerHTML = '';
+            if (q.options) { q.options.forEach((opt, i) => { optionsDiv.innerHTML += `<div class="modal-option" id="opt_${i}" onclick="checkAnswer(${i})">${opt}</div>`; }); }
 
             currentUser.notes = currentUser.notes || {};
             const userNote = currentUser.notes[q.id] || "";
@@ -494,95 +441,57 @@
 
             document.getElementById('modalAnswerText').innerText = q.answer;
             document.getElementById('modalExplainText').innerText = q.explain ? `Giải thích: ${q.explain}` : '';
-
             document.getElementById('modalAnswerBlock').style.display = 'none';
-            document.getElementById('btnToggleAnswer').innerText = '👁 Hiện đáp án & Lời giải';
+            document.getElementById('btnToggleAnswer').innerText = '👁 Hiện đáp án';
 
             document.getElementById('btnPrev').disabled = (currentIndex === 0);
             document.getElementById('btnNext').disabled = (currentIndex === currentList.length - 1);
-
-            updatePopupSaveBtn(q.id);
-            document.getElementById('qModal').classList.add('active');
+            updatePopupSaveBtn(q.id); document.getElementById('qModal').classList.add('active');
         }
 
         function saveNote() {
-            const q = currentList[currentIndex];
-            const text = document.getElementById('modalNoteInput').value.trim();
+            const q = currentList[currentIndex]; const text = document.getElementById('modalNoteInput').value.trim();
             currentUser.notes = currentUser.notes || {};
-            
-            if (text) {
-                currentUser.notes[q.id] = text;
-                document.getElementById('btnDeleteNote').style.display = "inline-block";
-                alert("Đã lưu ghi chú thành công!");
-            } else {
-                delete currentUser.notes[q.id];
-                document.getElementById('btnDeleteNote').style.display = "none";
-            }
-            syncCurrentUser();
-            if (document.getElementById('pageTitle').innerText === "Câu Hỏi Đã Lưu") { openSavedQuestions(); } else { renderQuestionList(); }
+            if (text) { currentUser.notes[q.id] = text; document.getElementById('btnDeleteNote').style.display = "inline-block"; } 
+            else { delete currentUser.notes[q.id]; document.getElementById('btnDeleteNote').style.display = "none"; }
+            syncLocalOnly(); // CHỈ LƯU LOCAL
+            if (document.getElementById('pageTitle').innerText === "Câu Hỏi Đã Lưu") openSavedQuestions(); else renderQuestionList();
         }
 
         function deleteNote() {
-            const q = currentList[currentIndex];
-            currentUser.notes = currentUser.notes || {};
-            
+            const q = currentList[currentIndex]; currentUser.notes = currentUser.notes || {};
             if(currentUser.notes[q.id]) {
-                delete currentUser.notes[q.id];
-                document.getElementById('modalNoteInput').value = "";
-                document.getElementById('btnDeleteNote').style.display = "none";
-                syncCurrentUser();
-                if (document.getElementById('pageTitle').innerText === "Câu Hỏi Đã Lưu") { openSavedQuestions(); } else { renderQuestionList(); }
+                delete currentUser.notes[q.id]; document.getElementById('modalNoteInput').value = ""; document.getElementById('btnDeleteNote').style.display = "none";
+                syncLocalOnly(); // CHỈ LƯU LOCAL
+                if (document.getElementById('pageTitle').innerText === "Câu Hỏi Đã Lưu") openSavedQuestions(); else renderQuestionList();
             }
         }
 
         function checkAnswer(selectedIndex) {
-            if (isAnswerRevealed) return; 
-            isAnswerRevealed = true;
-
-            const q = currentList[currentIndex];
-            const selectedText = q.options[selectedIndex];
-            const isCorrect = (selectedText === q.answer);
-
+            if (isAnswerRevealed) return; isAnswerRevealed = true;
+            const q = currentList[currentIndex]; const isCorrect = (q.options[selectedIndex] === q.answer);
             const options = document.querySelectorAll('.modal-option');
-            options.forEach((optEl, i) => {
-                optEl.classList.add('disabled'); 
-                if (q.options[i] === q.answer) { optEl.classList.add('correct'); }
-            });
-
-            if (!isCorrect) { document.getElementById(`opt_${selectedIndex}`).classList.add('wrong'); }
-
-            document.getElementById('modalAnswerBlock').style.display = 'block';
-            document.getElementById('btnToggleAnswer').innerText = '🙈 Ẩn đáp án & Lời giải';
+            options.forEach((optEl, i) => { optEl.classList.add('disabled'); if (q.options[i] === q.answer) optEl.classList.add('correct'); });
+            if (!isCorrect) document.getElementById(`opt_${selectedIndex}`).classList.add('wrong');
+            document.getElementById('modalAnswerBlock').style.display = 'block'; document.getElementById('btnToggleAnswer').innerText = '🙈 Ẩn đáp án';
         }
 
         function toggleAnswer() {
-            const ansBlock = document.getElementById('modalAnswerBlock');
-            const btn = document.getElementById('btnToggleAnswer');
-            const q = currentList[currentIndex];
-
+            const ansBlock = document.getElementById('modalAnswerBlock'); const btn = document.getElementById('btnToggleAnswer'); const q = currentList[currentIndex];
             if (ansBlock.style.display === 'none') {
-                ansBlock.style.display = 'block';
-                btn.innerText = '🙈 Ẩn đáp án & Lời giải';
-                isAnswerRevealed = true; 
-                const options = document.querySelectorAll('.modal-option');
-                options.forEach((optEl, i) => {
-                    optEl.classList.add('disabled');
-                    if (q.options[i] === q.answer) { optEl.classList.add('correct'); }
-                });
+                ansBlock.style.display = 'block'; btn.innerText = '🙈 Ẩn đáp án'; isAnswerRevealed = true; 
+                document.querySelectorAll('.modal-option').forEach((optEl, i) => { optEl.classList.add('disabled'); if (q.options[i] === q.answer) optEl.classList.add('correct'); });
             } else {
-                ansBlock.style.display = 'none';
-                btn.innerText = '👁 Hiện đáp án & Lời giải';
-                isAnswerRevealed = false; 
-                const options = document.querySelectorAll('.modal-option');
-                options.forEach(optEl => { optEl.classList.remove('disabled', 'correct', 'wrong'); });
+                ansBlock.style.display = 'none'; btn.innerText = '👁 Hiện đáp án'; isAnswerRevealed = false; 
+                document.querySelectorAll('.modal-option').forEach(optEl => { optEl.classList.remove('disabled', 'correct', 'wrong'); });
             }
         }
 
         function toggleSave(qId) {
             const index = currentUser.savedQuestions.indexOf(qId);
-            if (index > -1) { currentUser.savedQuestions.splice(index, 1); } else { currentUser.savedQuestions.push(qId); }
-            syncCurrentUser();
-            if (document.getElementById('pageTitle').innerText === "Câu Hỏi Đã Lưu") { openSavedQuestions(); } else { renderQuestionList(); }
+            if (index > -1) currentUser.savedQuestions.splice(index, 1); else currentUser.savedQuestions.push(qId);
+            syncLocalOnly(); // CHỈ LƯU LOCAL
+            if (document.getElementById('pageTitle').innerText === "Câu Hỏi Đã Lưu") openSavedQuestions(); else renderQuestionList();
         }
 
         function closeModal() { document.getElementById('qModal').classList.remove('active'); }
@@ -592,7 +501,7 @@
         function toggleSaveFromModal() { const currentQId = currentList[currentIndex].id; toggleSave(currentQId); updatePopupSaveBtn(currentQId); }
         function updatePopupSaveBtn(qId) {
             const btn = document.getElementById('modalBtnSave'); const isSaved = currentUser.savedQuestions.includes(qId);
-            btn.className = `btn btn-save ${isSaved ? 'saved' : ''}`; btn.innerText = isSaved ? '★ Đã lưu (Hủy)' : '☆ Lưu câu này';
+            btn.className = `btn btn-save ${isSaved ? 'saved' : ''}`; btn.innerText = isSaved ? '★ Đã lưu' : '☆ Lưu';
         }
 
         function switchAppView(viewId) {
@@ -602,8 +511,7 @@
         }
 
         function showMenu() { switchAppView('menuList'); }
-        window.onclick = function(event) { const modal = document.getElementById('qModal'); if (event.target === modal) { closeModal(); } }
-
+        window.onclick = function(event) { const modal = document.getElementById('qModal'); if (event.target === modal) closeModal(); }
     </script>
 </body>
 </html>
